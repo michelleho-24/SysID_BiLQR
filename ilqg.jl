@@ -108,6 +108,8 @@ function iLQG(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
         A, B = superAB(pomdp, q, r, N, s_bar, u_bar)
 
+        # @infiltrate
+
         # Use Λ for the final state cost
         V = copy(Q_N)
         v = Q_N * (s_bar[N+1, :] - s_goal)
@@ -159,7 +161,8 @@ function iLQG(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
     info_dict = Dict(:converged => converged, :s_bar => s_bar, :u_bar => u_bar, :cost => cost_final)
 
     # return s_bar, u_bar, Y, y
-    return u_bar[1], info_dict
+   
+    return u_bar[1,:], info_dict
 end
 
 

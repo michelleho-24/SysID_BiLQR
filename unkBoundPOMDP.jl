@@ -33,8 +33,10 @@ function dyn_mean(p::UnkBoundPOMDP, s::AbstractVector, a::AbstractVector)
     shift = h - p.shift  # Adjusts the midpoint of the transition, set to h for this example
     α = 1 + sigmoid(scale * (y - shift))
 
-    x_next = max(x + ax * α,0.0)
-    y_next = max(y + ay,0.0)
+    # x_next = max(x + ax * α,0.0)
+    # y_next = max(y + ay,0.0)
+    x_next = x + ax * α
+    y_next = y + ay
 
     h_next = h + p.W_process[3,3]
 

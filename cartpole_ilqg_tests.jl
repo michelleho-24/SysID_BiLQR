@@ -6,14 +6,13 @@ include("ekf.jl")
 
 using Plots
 
-
 mdp = CartpoleMDP()
 
-b0 = [mdp.s_init..., vec(1e-3 * Matrix{Float64}(I, 4, 4))...]
+b0 = [mdp.s_init..., vec(1e-3 * Matrix{Float64}(I, num_states(mdp), num_states(mdp)))...]
 # b0 = [0.0, 0.0, 1.0, 0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
 iters = 10
 b = b0
-s_bar = zeros(4, iters)
+s_bar = zeros(num_states(mdp), iters)
 
 for i in 1:iters
     global b
@@ -41,10 +40,6 @@ for i in 1:iters
 
 end 
 
-for i in 1:size(s_bar, 2)
-    println(visualize(mdp, s_bar[:,i]))
-end
-
 # Initialize arrays to store coordinates and time
 cart_x_coords = []
 cart_y_coords = []
@@ -53,8 +48,9 @@ counterweight_y_coords = []
 time_coords = []
 
 # Collect coordinates from each column of s_bar
-for i in 5:size(s_bar, 2)
+for i in 1:size(s_bar, 2)
     cart_coords, counterweight_coords = visualize(mdp, s_bar[:,i])
+    println(cart_coords, counterweight_coords)
     cart_x, cart_y = cart_coords
     counterweight_x, counterweight_y = counterweight_coords
     push!(cart_x_coords, cart_x)
@@ -71,10 +67,9 @@ end
 
 # Create the animation
 animation = @animate for i in 1:length(time_coords)
+    println("Processing frame $i")
     plot(
         centered_rectangle_shape(cart_x_coords[i], cart_y_coords[i], 0.01, 0.1), seriestype=:shape, label="Cart", 
-        # xlims=(-0.05, 0.05), 
-        # ylims=(-0.01, 1.01),
         xlabel="X", ylabel="Y", title="Cart-pole Random example", 
         legend=:topright, fillalpha=0.5, color=:blue
     )
@@ -83,4 +78,6 @@ animation = @animate for i in 1:length(time_coords)
 end
 
 # Save the animation as a GIF
-gif(animation, "random_cart_counterweight_animation.gif", fps=2)
+println("Saving animation as GIF")
+gif(animation, "plots/random_cart_counterweight_animation.gif", fps=2)
+println("Animation saved successfully")
