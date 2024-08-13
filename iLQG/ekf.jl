@@ -4,7 +4,6 @@ using LinearAlgebra
 using ForwardDiff
 using Distributions
 using Infiltrator
-include("cartpole.jl")
 include("ilqr_types.jl")
 
 function ekf(pomdp, b, a, z)

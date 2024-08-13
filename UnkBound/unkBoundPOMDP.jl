@@ -1,7 +1,8 @@
 using Parameters
 
 @with_kw mutable struct UnkBoundPOMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
-    # reward
+    
+    # cost matrices
     Q::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 3, 3)
     Q_N::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 3, 3)
     R::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 2, 2)

@@ -1,8 +1,8 @@
 
-include("ilqr_types.jl")
+include("../iLQG/ilqr_types.jl")
 include("cartpole.jl")
-include("ilqg.jl")
-include("ekf.jl")
+include("../iLQG/ilqg.jl")
+include("../iLQG/ekf.jl")
 
 using Plots
 
