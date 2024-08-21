@@ -1,4 +1,5 @@
 using Parameters
+using LinearAlgebra
 
 @with_kw mutable struct UnkBoundPOMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
     
@@ -6,7 +7,7 @@ using Parameters
     Q::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 3, 3)
     Q_N::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 3, 3)
     R::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 2, 2)
-    Λ::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 9, 9)
+    Λ::Matrix{Float64} = Diagonal([ones(8); 5.0])
     
     # start and end positions
     s_init::Vector{Float64} = [0.0, 0.0, 5.0]
