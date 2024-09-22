@@ -3,11 +3,7 @@ using ForwardDiff
 using Distributions
 using POMDPs
 using Infiltrator
-# using DifferentialEquations
-# include("super_state.jl")
-# include("ilqr_tests.jl")
-
-form_belief_vector(x,Σ) = [x..., vec(Σ)...]
+using Optim
 
 function sigma_pred(pomdp, x::AbstractVector, u::AbstractVector, Σ::AbstractMatrix)
     At = ForwardDiff.jacobian(x -> dyn_mean(pomdp, x, u), x)
@@ -21,7 +17,7 @@ function sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix)
     # Sigma - Sigma C' inv() C Sigma 
 end
 
-function update_state(pomdp::MPCPOMDP, belief::AbstractVector, u::AbstractVector)
+function update_belief(pomdp::iLQGPOMDP, belief::AbstractVector, u::AbstractVector)
     # extract mean and covariance from belief state
     n_states = num_states(pomdp)
     x = belief[1:n_states]
@@ -29,31 +25,54 @@ function update_state(pomdp::MPCPOMDP, belief::AbstractVector, u::AbstractVector
 
     # mean update belief using most likely observation (no measurement gain)
     x_new = dyn_mean(pomdp, x, u)
-    Σ_new = sigma_pred(pomdp, x, u, Σ)
-    # create new belief state
-    belief_new = form_belief_vector(x_new, Σ_new)
-    return belief_new
+    Σ_pred = sigma_pred(pomdp, x,u,Σ)
+    Σ_new = sigma_update(pomdp, x_new,Σ_pred)
+
+    return form_belief_vector(x_new,Σ_new)
+end
+function cost(Q, R, Q_N, s, u, s_goal)
+    # Compute the cost of a state-action pair
+    return (s - s_goal)' * Q * (s - s_goal) + u' * R * u + (s - s_goal)' * Q_N * (s - s_goal)
 end
 
-function optimize_control(pomdp::MPCPOMDP, x::AbstractVector, horizon::Int)
-    # This function should optimize control actions over a given horizon.
-    # For simplicity, assume a linear or quadratic cost function and linear dynamics.
-    
-    u_seq = []
-    
-    # Dummy loop to represent optimization (replace with actual optimization code)
-    for t in 1:horizon
-        # Calculate control for the t-th step (this should be an optimization problem)
-        u_t = -x  # Placeholder: In reality, this would be the result of solving an optimization problem.
-        push!(u_seq, u_t)
+function mpc(pomdp::iLQGPOMDP, initial_belief::AbstractVector, horizon::Int)
+    n_actions = num_actions(pomdp)
+    initial_actions = [rand(n_actions) for _ in 1:horizon]
+    flat_initial_actions = reduce(vcat, initial_actions)
+
+    function cost_function(flat_actions)
+        actions = [flat_actions[(i-1)*n_actions+1:i*n_actions] for i in 1:horizon]
+        belief = initial_belief
+        total_cost = 0.0
+
+        for t in 1:horizon
+            action = actions[t]
+            state = dyn_mean(pomdp, belief[1:num_states(mdp)], action) # + dyn_noise(pomdp, belief[1:num_states(mdp)], action)
+            noise_state = rand(MvNormal(mdp.W_state_process))
+            noise_total = vcat(noise_state, 0.0)
+            state = state + noise_total
+            # observation = obs_mean(pomdp, state) + obs_noise(pomdp, state)
+            # belief = update_belief(pomdp, belief, action)
+
+            total_cost += cost(pomdp.Q, pomdp.R, pomdp.Q_N, state, action, pomdp.s_goal[1:num_states(mdp)])
+        end
+
+        return total_cost
     end
-    
-    return u_seq
+
+    result = optimize(cost_function, flat_initial_actions, method=GradientDescent())
+    opt_action = result.minimizer[1:n_actions]
+
+    return opt_action
 end
 
-function mpc_control(pomdp::MPCPOMDP, x::AbstractVector, horizon::Int)
-    u_seq = optimize_control(pomdp, x, horizon)
-    
-    # Return the first action calculated
-    return u_seq[1]
-end
+# function mpc_control_loop(pomdp::MyPOMDP, initial_belief::MyBelief, horizon::Int)
+#     belief = initial_belief
+#     while !is_terminal(pomdp, belief)
+#         optimal_action = belief_mpc(pomdp, belief, horizon)
+#         state = transition(pomdp, belief, optimal_action)
+#         observation = observation_model(pomdp, state)
+#         belief = update_belief(belief, optimal_action, observation)
+#         # Apply the optimal action and update the model parameters
+#     end
+# end

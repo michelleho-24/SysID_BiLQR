@@ -1,41 +1,33 @@
 
-include("../iLQG/ilqr_types.jl")
+include("../BiLQR/ilqr_types.jl")
 include("cartpole.jl")
-include("../iLQG/ilqg.jl")
-include("../iLQG/ekf.jl")
+include("../BiLQR/bilqr.jl")
+include("../BiLQR/ekf.jl")
 
 using Plots
 
 mdp = CartpoleMDP()
 
 b0 = [mdp.s_init..., vec(1e-3 * Matrix{Float64}(I, num_states(mdp), num_states(mdp)))...]
-# b0 = [0.0, 0.0, 1.0, 0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
 iters = 10
 b = b0
 s_bar = zeros(num_states(mdp), iters)
 
 for i in 1:iters
     global b
-    # a, info_dict = iLQG(mdp, b)
-    # println("action ", a)
-    # println("cost ", info_dict[:cost])
-    # s_bar = info_dict[:s_bar]
-
-    # dummy action and transition
-    a = randn(num_actions(mdp))
+    a, info_dict = iLQG(mdp, b)
     println("action ", a)
-    s = dyn_mean(mdp, b[1:4], a)
-    s_bar[:, i] = s
+    println("cost ", info_dict[:cost])
+    s_bar = info_dict[:s_bar]
 
-    # # get first state after action 
-    # s_bar = info_dict[:s_bar]
-    # s = s_bar[:, 2]
+    # get first state after action 
+    s_bar = info_dict[:s_bar]
+    s = s_bar[:, 2]
 
     # get observation
-    z = obs_mean(mdp, s)
+    z = obs_mean(mdp, s) + obs_noise(mdp, s)
 
     # update belief 
-    # this should be using the regular jacobians, not super 
     b = ekf(mdp, b, a, z)
 
 end 
@@ -81,3 +73,18 @@ end
 println("Saving animation as GIF")
 gif(animation, "plots/random_cart_counterweight_animation.gif", fps=2)
 println("Animation saved successfully")
+
+
+# println(mp_cov_per_timestep)
+
+# # Plot cost vs time
+# plot(1:iters, cost_per_timestep, xlabel = "Time", ylabel = "Cost", title = "$(method): Cost vs time")
+# savefig("$(method)_cost_vs_time.png")
+
+# # Plot cumulative cost vs time
+# plot(1:iters, cumsum(cost_per_timestep), xlabel = "Time", ylabel = "Cumulative Cost", title = "$(method): Cumulative Cost vs time")
+# savefig("$(method)_cumulative_cost_vs_time.png")
+
+# # plot variance of belief of mass of pole vs time
+# plot(1:iters, mp_cov_per_timestep, xlabel = "Time", ylabel = "Variance of mass of pole", title = "$(method): Variance of mass of pole vs time")
+# savefig("$(method)_mp_cov_vs_time.png")

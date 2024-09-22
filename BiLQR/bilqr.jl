@@ -30,7 +30,7 @@ function update_belief(pomdp::iLQGPOMDP, belief::AbstractVector, u::AbstractVect
     # mean update belief using most likely observation (no measurement gain)
     x_new = dyn_mean(pomdp, x, u)
     Σ_pred = sigma_pred(pomdp, x,u,Σ)
-    Σ_new = sigma_update(pomdp, x_new,Σ_pred)
+    Σ_new = sigma_update(pomdp, x_new, Σ_pred)
 
     return form_belief_vector(x_new,Σ_new)
 end
@@ -55,7 +55,7 @@ function cost(Q, R, Q_N, s, u, s_goal)
 end
 
 # iLQR function
-function iLQG(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
+function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
     if max_iters <= 1
         throw(ArgumentError("Argument `max_iters` must be at least 2."))
@@ -153,10 +153,10 @@ function iLQG(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
     # cost_final = cost(Q, R, Q_N, s_bar[N+1, :], u_rand, s_goal)
     cost_final = cost(Q, R, Q_N, s_bar[N+1, :], u_bar[N, :], s_goal)
 
-    if !converged
-        # throw(RuntimeError("iLQR did not converge!"))
-        print("iLQR did not converge")
-    end
+    # if !converged
+    #     # throw(RuntimeError("iLQR did not converge!"))
+    #     print("iLQR did not converge")
+    # end
 
     info_dict = Dict(:converged => converged, :s_bar => s_bar, :u_bar => u_bar, :cost => cost_final)
 
