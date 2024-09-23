@@ -9,7 +9,7 @@ include("../Baselines/MPC.jl")
 include("../Baselines/random_policy.jl")
 # include("../Baselines/Regression.jl")
 
-function xplane_sysid(seed, pomdp, b0, Σ0, iters = 50)
+function xplane_sysid(seed, pomdp, Σ0, iters = 50)
     Random.seed!(seed)
     # pomdp = XPlanePOMDP()
 
