@@ -109,7 +109,7 @@ function bilqr(pomdp, b0; N = 4, eps=1e-3, max_iters=15)
     converged = false
 
     for iter in 1:max_iters
-        println("BiLQR Iteration: ", iter)
+        # println("BiLQR Iteration: ", iter)
 
         A, B = superAB(pomdp, q, r, N, s_bar, u_bar)
 
