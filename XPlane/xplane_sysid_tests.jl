@@ -15,7 +15,7 @@ include("../Baselines/random_policy.jl")
 pomdp = XPlanePOMDP()
 
 # want A and B to have higher uncertainty than the rest of the state
-Σ0 = Diagonal(vcat(fill(0.01, 11), fill(0.1, 11^2 + 3*11)))
+Σ0 = Diagonal(vcat(fill(0.01, 8), fill(0.1, 8^2 + 3*8)))
     
 # Preallocate belief-state vector
 b0 = Vector{Float64}(undef, length(mdp.s_init) + length(vec(Σ0)))
@@ -38,7 +38,7 @@ AB_variances = Vector{Matrix{Float64}}(undef, iters)
 s_true = pomdp.s_init
 
 for t in 1:iters
-    # println("Iteration: ", t)
+    println("Iteration: ", t)
     global b, s_true
 
     # compute optimal action
@@ -53,8 +53,8 @@ for t in 1:iters
 
     # Add process noise to the true state
     noise_state = rand(MvNormal(mdp.W_state_process))
-    noise_total = vcat(noise_state, vec(0.0 * Matrix{Float64}(I, 11, 11)), 
-    vec(0.0 * Matrix{Float64}(ones(11, 3))))
+    noise_total = vcat(noise_state, vec(0.0 * Matrix{Float64}(I, 8, 8)), 
+    vec(0.0 * Matrix{Float64}(ones(8, 3))))
     s_next_true += noise_total
     
     # Generate observation from the true next state
@@ -68,18 +68,18 @@ for t in 1:iters
     b = ekf(pomdp, b, a, z)
 
     
-    A_vec = b[11+1:11 + 11^2]
-    B_vec = b[11 + 11^2 + 1:num_states(pomdp)]
+    A_vec = b[8+1:8 + 8^2]
+    B_vec = b[8 + 8^2 + 1:num_states(pomdp)]
     # AB_vec = vcat(A_vec, B_vec)
     cov_vec = b[num_states(pomdp)+1:end]
 
     # Reshape the flattened covariance into a 165x165 matrix
     cov_full = reshape(cov_vec, num_states(pomdp), num_states(pomdp))
-    cov_A = cov_full[12:132, 12:132]
-    cov_B = cov_full[133:165, 133:165]
+    cov_A = cov_full[8+1:8^2+8, 8+1:8^2+8]
+    cov_B = cov_full[8^2+8+1:8+8^2+3*8, 8^2+8+1:8+8^2+3*8]
 
-    A_t = reshape(A_vec, 11, 11)
-    B_t = reshape(B_vec, 11, 3)
+    A_t = reshape(A_vec, 8, 8)
+    B_t = reshape(B_vec, 8, 3)
     # AB_t = hcat(A_t, B_t)
 
     # Extract the 154x154 block corresponding to A (121 elements) and B (33 elements)

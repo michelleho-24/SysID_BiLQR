@@ -3,6 +3,7 @@ using ForwardDiff
 using Distributions
 using POMDPs
 using Infiltrator
+using SparseArrays
 # using DifferentialEquations
 # include("super_state.jl")
 # include("ilqr_tests.jl")
@@ -55,6 +56,7 @@ function cost(Q, R, Q_N, s, u, s_goal)
 end
 
 # iLQR function
+# function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
     if max_iters <= 1
@@ -73,14 +75,14 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
     s_goal = pomdp.s_goal
 
-    Q = zeros(num_belief_states, num_belief_states)
-    Q[1:n_states, 1:n_states] = pomdp.Q
+    Q = spzeros(num_belief_states, num_belief_states)
+    Q[1:n_states, 1:n_states] .= pomdp.Q
 
     R = pomdp.R
 
-    Q_N = zeros(num_belief_states, num_belief_states)
-    Q_N[n_states + 1:end, n_states + 1:end] = pomdp.Λ
-    Q_N[1:n_states, 1:n_states] = pomdp.Q_N
+    Q_N = spzeros(num_belief_states, num_belief_states)
+    Q_N[n_states + 1:end, n_states + 1:end] .= pomdp.Λ
+    Q_N[1:n_states, 1:n_states] .= pomdp.Q_N
 
     q = size(Q,1)  # state dimension including means and covariances, was n
     r = size(R, 1)  # control dimension, was m, should be 2 
