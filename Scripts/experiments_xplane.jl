@@ -26,7 +26,7 @@ for seed in 1:50
     global pomdp, b0, Σ0
     println("Seed: ", seed)
     
-    b_end_seed, A_estimates_seed, A_variances_seed, B_estimates_seed, B_variances_seed, AB_variances_seed, ΣΘΘ_seed = xplane_sysid(seed, pomdp, b0, Σ0)
+    b_end_seed, A_estimates_seed, A_variances_seed, B_estimates_seed, B_variances_seed, AB_variances_seed, ΣΘΘ_seed = xplane_sysid(seed, pomdp, b0)
 
     # Store the vector with the seed as the key
     all_b_ends[seed] = b_end_seed
