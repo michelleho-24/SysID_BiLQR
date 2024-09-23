@@ -42,7 +42,7 @@ function superAB(pomdp, q, r, N, s_bar, u_bar)
     B = zeros(N, q, r)
 
     for k in 1:N
-        println("k: ", k)
+        # println("k: ", k)
         A[k, :, :] = ForwardDiff.jacobian(bel -> update_belief(pomdp, bel, u_bar[k, :],), s_bar[k, :])
         B[k, :, :] = ForwardDiff.jacobian(u -> update_belief(pomdp, s_bar[k, :], u), u_bar[k, :])
     end
@@ -58,7 +58,7 @@ end
 
 # iLQR function
 # function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
-function bilqr(pomdp, b0; N = 4, eps=1e-3, max_iters=20)
+function bilqr(pomdp, b0; N = 4, eps=1e-3, max_iters=15)
 # function bilqr(pomdp, b0; N = 1, eps=1e-3, max_iters=2)
 
     if max_iters <= 1

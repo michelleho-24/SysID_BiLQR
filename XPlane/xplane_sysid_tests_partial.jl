@@ -37,7 +37,7 @@ function xplane_sysid(seed, pomdp, b0, iters = 30)
     s_true = pomdp.s_init
 
     for t in 1:iters
-        println("Belief Update Iteration: ", t)
+        # println("Belief Update Iteration: ", t)
         # global b, s_true
 
         # compute optimal action
