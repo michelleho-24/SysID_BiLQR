@@ -1,8 +1,6 @@
 using Plots
 using Random
 
-Random.seed!(1234)
-
 include("../BiLQR/ilqr_types.jl")
 include("../XPlane/Cessna_SysID_partial.jl")
 include("../BiLQR/bilqr.jl")
@@ -12,6 +10,7 @@ include("../Baselines/random_policy.jl")
 # include("../Baselines/Regression.jl")
 
 function xplane_sysid(seed, pomdp, b0, Σ0, iters = 50)
+    Random.seed!(seed)
     # pomdp = XPlanePOMDP()
 
     # # want A and B to have higher uncertainty than the rest of the state
@@ -39,7 +38,7 @@ function xplane_sysid(seed, pomdp, b0, Σ0, iters = 50)
 
     for t in 1:iters
         println("Belief Update Iteration: ", t)
-        global b, s_true
+        # global b, s_true
 
         # compute optimal action
         a, info_dict = bilqr(mdp, b)

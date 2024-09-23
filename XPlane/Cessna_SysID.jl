@@ -24,15 +24,13 @@ include("../BiLQR/ilqr_types.jl")
     # Λ::Matrix{Float64} = 1e-3 * Matrix{Float64}(I, 121, 121)
     Q_N::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 8), fill(0.1, 88)))
     # Λ::Matrix{Float64} = Diagonal(vec([i ≥ 12 && j ≥ 12 ? 0.1 : 1e-10 for i in 1:165, j in 1:165])) # total 165^2
-    Λ::Matrix{Float64} = spdiagm(0 => vec([i ≥ 9 && j ≥ 9 ? 1.0 : 1e-10 for i in 1:96, j in 1:96]))
+    Λ::Matrix{Float64} = spdiagm(0 => vec([i ≥ 9 && j ≥ 9 ? 1.0 : 1e-10 for i in 1:96, j in 1:96])) # total 96^2
     # start and end positions
     s_init::Vector{Float64} = vcat([0.0, 1000.0, pi/2.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
                                    vec(0.01 * Matrix{Float64}(I, 8, 8)), 
                                    vec(0.01 * Matrix{Float64}(ones(8, 3))))
     
-    s_goal::Vector{Float64} = vcat(s_init, 
-                                   vec(Matrix{Float64}(I, 8, 8)), 
-                                   vec(Matrix{Float64}(ones(8, 3))))
+    s_goal::Vector{Float64} = vcat(s_init ..., vec(Matrix{Float64}(I, 96, 96))...)
     
     # mechanics
     m::Float64 = 6500.0
