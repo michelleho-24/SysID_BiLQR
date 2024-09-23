@@ -42,6 +42,7 @@ function superAB(pomdp, q, r, N, s_bar, u_bar)
     B = zeros(N, q, r)
 
     for k in 1:N
+        println("k: ", k)
         A[k, :, :] = ForwardDiff.jacobian(bel -> update_belief(pomdp, bel, u_bar[k, :],), s_bar[k, :])
         B[k, :, :] = ForwardDiff.jacobian(u -> update_belief(pomdp, s_bar[k, :], u), u_bar[k, :])
     end
@@ -57,7 +58,8 @@ end
 
 # iLQR function
 # function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
-function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
+function bilqr(pomdp, b0; N = 4, eps=1e-3, max_iters=20)
+# function bilqr(pomdp, b0; N = 1, eps=1e-3, max_iters=2)
 
     if max_iters <= 1
         throw(ArgumentError("Argument `max_iters` must be at least 2."))
@@ -107,6 +109,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
     converged = false
 
     for iter in 1:max_iters
+        println("BiLQR Iteration: ", iter)
 
         A, B = superAB(pomdp, q, r, N, s_bar, u_bar)
 
@@ -114,7 +117,9 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
         # Use Λ for the final state cost
         V = copy(Q_N)
+
         v = Q_N * (s_bar[N+1, :] - s_goal)
+
 
         # Backward pass
         for k in N:-1:1
