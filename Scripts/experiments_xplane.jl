@@ -22,7 +22,7 @@ b0[1:length(mdp.s_init)] .= mdp.s_init
 b0[length(mdp.s_init) + 1:end] .= vec(Σ0)
 
 # Run the system identification experiment
-for seed in 1:50
+for seed in 1:20
     global pomdp, b0, Σ0
     println("Seed: ", seed)
     

@@ -47,32 +47,21 @@ function mpc(pomdp::iLQGPOMDP, initial_belief::AbstractVector, horizon::Int)
 
         for t in 1:horizon
             action = actions[t]
-            state = dyn_mean(pomdp, belief[1:num_states(mdp)], action) # + dyn_noise(pomdp, belief[1:num_states(mdp)], action)
-            noise_state = rand(MvNormal(mdp.W_state_process))
-            noise_total = vcat(noise_state, 0.0)
-            state = state + noise_total
+            state = dyn_mean(pomdp, belief[1:num_states(pomdp)], action) # + dyn_noise(pomdp, belief[1:num_states(mdp)], action)
+            # noise_state = rand(MvNormal(pomdp.W_state_process))
+            # noise_total = vcat(noise_state, 0.0)
+            # state = state + noise_total
             # observation = obs_mean(pomdp, state) + obs_noise(pomdp, state)
             # belief = update_belief(pomdp, belief, action)
 
-            total_cost += cost(pomdp.Q, pomdp.R, pomdp.Q_N, state, action, pomdp.s_goal[1:num_states(mdp)])
+            total_cost += cost(pomdp.Q, pomdp.R, pomdp.Q_N, state, action, pomdp.s_goal[1:num_states(pomdp)])
         end
 
         return total_cost
     end
 
-    result = optimize(cost_function, flat_initial_actions, method=GradientDescent())
+    result = optimize(cost_function, flat_initial_actions, method=BFGS())
     opt_action = result.minimizer[1:n_actions]
 
     return opt_action
 end
-
-# function mpc_control_loop(pomdp::MyPOMDP, initial_belief::MyBelief, horizon::Int)
-#     belief = initial_belief
-#     while !is_terminal(pomdp, belief)
-#         optimal_action = belief_mpc(pomdp, belief, horizon)
-#         state = transition(pomdp, belief, optimal_action)
-#         observation = observation_model(pomdp, state)
-#         belief = update_belief(belief, optimal_action, observation)
-#         # Apply the optimal action and update the model parameters
-#     end
-# end

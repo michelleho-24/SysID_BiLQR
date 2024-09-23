@@ -58,7 +58,7 @@ end
 
 # iLQR function
 # function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
-function bilqr(pomdp, b0; N = 4, eps=1e-3, max_iters=15)
+function bilqr(pomdp, b0; N = 3, eps=1e-3, max_iters=5)
 # function bilqr(pomdp, b0; N = 1, eps=1e-3, max_iters=2)
 
     if max_iters <= 1

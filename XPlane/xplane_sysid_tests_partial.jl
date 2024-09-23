@@ -66,7 +66,6 @@ function xplane_sysid(seed, pomdp, b0, iters = 30)
         # Use your ekf function to update the belief
         b = ekf(pomdp, b, a, z)
 
-        
         A_vec = b[8+1:8 + 8^2]
         B_vec = b[8 + 8^2 + 1:num_states(pomdp)]
         # AB_vec = vcat(A_vec, B_vec)

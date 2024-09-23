@@ -1,5 +1,5 @@
 using JLD2
-include("../Cartpole/cartpole_sysid_tests_partial.jl")
+include("../Cartpole/cartpole_sysid_tests.jl")
 # include("../Cartpole/cartpole_sysid_tests_partial.jl")
 
 # Initialize dictionaries to store outputs for each seed
@@ -22,7 +22,7 @@ for seed in 1:50
     all_ΣΘΘ[seed] = ΣΘΘ_seed
 
     # Save all dictionaries to a JLD2 file
-    @save "bilqr_cartpolepartial_miac_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ
+    @save "mpc_cartpolefull_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ
 end
 
 # # Load the dictionaries from the JLD2 file
