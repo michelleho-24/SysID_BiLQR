@@ -28,11 +28,11 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
     # mp_cov_per_timestep = zeros(iters)
     # mp_var_per_timestep = zeros(iters)
     # cost_per_timestep = zeros(iters)
-    A_estimates = Vector{Matrix{Float64}}(undef, iters)
-    A_variances = Vector{Matrix{Float64}}(undef, iters)
-    B_estimates = Vector{Matrix{Float64}}(undef, iters)
-    B_variances = Vector{Matrix{Float64}}(undef, iters)
-    AB_variances = Vector{Matrix{Float64}}(undef, iters)
+    A_estimates = Vector{Matrix{Float16}}(undef, iters)
+    A_variances = Vector{Matrix{Float16}}(undef, iters)
+    B_estimates = Vector{Matrix{Float16}}(undef, iters)
+    B_variances = Vector{Matrix{Float16}}(undef, iters)
+    AB_variances = Vector{Matrix{Float16}}(undef, iters)
 
     s_true = pomdp.s_init
 
@@ -52,8 +52,8 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
 
         # Add process noise to the true state
         noise_state = rand(MvNormal(mdp.W_state_process))
-        noise_total = vcat(noise_state, vec(0.0 * Matrix{Float64}(I, 8, 8)), 
-        vec(0.0 * Matrix{Float64}(ones(8, 3))))
+        noise_total = vcat(noise_state, vec(0.0 * Matrix{Float16}(I, 8, 8)), 
+        vec(0.0 * Matrix{Float16}(ones(8, 3))))
         s_next_true += noise_total
         
         # Generate observation from the true next state

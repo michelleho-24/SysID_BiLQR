@@ -43,7 +43,7 @@ function system_identification(seed)
 
     for t in 1:num_steps
 
-        a, info_dict = mpc(pomdp, b)
+        a = mpc(pomdp, b, 10)
         # a = [rand() * 20.0 - 10.0]
         
         # Simulate the true next state

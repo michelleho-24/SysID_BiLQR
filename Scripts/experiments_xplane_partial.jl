@@ -3,13 +3,13 @@ include("../XPlane/xplane_sysid_tests_partial.jl")
 # include("../Cartpole/cartpole_sysid_tests_partial.jl")
 
 # Initialize dictionaries to store outputs for each seed
-all_b_ends = Dict{Int, Vector{Float64}}()
-all_A_estimates = Dict{Int,  Vector{Matrix{Float64}}}()
-all_A_variances = Dict{Int,  Vector{Matrix{Float64}}}()
-all_B_estimates = Dict{Int,  Vector{Matrix{Float64}}}()
-all_B_variances = Dict{Int,  Vector{Matrix{Float64}}}()
-all_AB_variances = Dict{Int,  Vector{Matrix{Float64}}}()
-all_ΣΘΘ = Dict{Int, Matrix{Float64}}()
+all_b_ends = Dict{Int, Vector{Float16}}()
+all_A_estimates = Dict{Int,  Vector{Matrix{Float16}}}()
+all_A_variances = Dict{Int,  Vector{Matrix{Float16}}}()
+all_B_estimates = Dict{Int,  Vector{Matrix{Float16}}}()
+all_B_variances = Dict{Int,  Vector{Matrix{Float16}}}()
+all_AB_variances = Dict{Int,  Vector{Matrix{Float16}}}()
+all_ΣΘΘ = Dict{Int, Matrix{Float16}}()
 
 pomdp = XPlanePOMDP()
 
@@ -17,7 +17,7 @@ pomdp = XPlanePOMDP()
 Σ0 = Diagonal(vcat(fill(0.01, 8), fill(0.1, 8^2 + 3*8)))
     
 # Preallocate belief-state vector
-b0 = Vector{Float64}(undef, length(mdp.s_init) + length(vec(Σ0)))
+b0 = Vector{Float16}(undef, length(mdp.s_init) + length(vec(Σ0)))
 b0[1:length(mdp.s_init)] .= mdp.s_init
 b0[length(mdp.s_init) + 1:end] .= vec(Σ0)
 
