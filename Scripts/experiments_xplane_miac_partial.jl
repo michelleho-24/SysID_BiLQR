@@ -1,6 +1,6 @@
 using JLD2
 # include("../XPlane/xplane_miac_tests.jl")
-include("../Cartpole/cartpole_sysid_tests_partial.jl")
+include("../XPlane/xplane_miac_tests_partial.jl")
 
 # Initialize dictionaries to store outputs for each seed
 all_b = Dict{Int, Vector{Vector{Float16}}}()
