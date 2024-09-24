@@ -47,17 +47,17 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
         # a = [rand() * 10.0 for i in 1:3]
 
         # Simulate the true next state
-        s_next_true = dyn_mean(pomdp, s_true, a)
+        s_true = dyn_mean(pomdp, s_true, a)
         # println("s_next_true: ", s_next_true)
 
         # Add process noise to the true state
         noise_state = rand(MvNormal(mdp.W_state_process))
         noise_total = vcat(noise_state, vec(0.0 * Matrix{Float16}(I, 8, 8)), 
         vec(0.0 * Matrix{Float16}(ones(8, 3))))
-        s_next_true += noise_total
+        s_true += noise_total
         
         # Generate observation from the true next state
-        z = obs_mean(pomdp, s_next_true)
+        z = obs_mean(pomdp, s_true)
         
         # Add observation noise
         obsnoise = rand(MvNormal(zeros(num_observations(pomdp)), pomdp.W_obs))

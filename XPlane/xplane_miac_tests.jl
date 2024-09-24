@@ -28,6 +28,8 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
     # mp_cov_per_timestep = zeros(iters)
     # mp_var_per_timestep = zeros(iters)
     # cost_per_timestep = zeros(iters)
+    all_b = Vector{Vector{Float16}}(undef, iters)
+    all_s = Vector{Vector{Float16}}(undef, iters)
     A_estimates = Vector{Matrix{Float16}}(undef, iters)
     A_variances = Vector{Matrix{Float16}}(undef, iters)
     B_estimates = Vector{Matrix{Float16}}(undef, iters)
@@ -35,6 +37,9 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
     AB_variances = Vector{Matrix{Float16}}(undef, iters)
 
     s_true = pomdp.s_init
+
+    all_b[1] = b
+    all_s[1] = s_true
 
     for t in 1:iters
         # println("Belief Update Iteration: ", t)
@@ -47,17 +52,17 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
         # a = [rand() * 10.0 for i in 1:3]
 
         # Simulate the true next state
-        s_next_true = dyn_mean(pomdp, s_true, a)
+        s_true = dyn_mean(pomdp, s_true, a)
         # println("s_next_true: ", s_next_true)
 
         # Add process noise to the true state
         noise_state = rand(MvNormal(mdp.W_state_process))
         noise_total = vcat(noise_state, vec(0.0 * Matrix{Float16}(I, 8, 8)), 
         vec(0.0 * Matrix{Float16}(ones(8, 3))))
-        s_next_true += noise_total
+        s_true += noise_total
         
         # Generate observation from the true next state
-        z = obs_mean(pomdp, s_next_true)
+        z = obs_mean(pomdp, s_true)
         
         # Add observation noise
         obsnoise = rand(MvNormal(zeros(num_observations(pomdp)), pomdp.W_obs))
@@ -65,7 +70,6 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
         
         # Use your ekf function to update the belief
         b = ekf(pomdp, b, a, z)
-
         
         A_vec = b[8+1:8 + 8^2]
         B_vec = b[8 + 8^2 + 1:num_states(pomdp)]
@@ -92,13 +96,15 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
         B_estimates[t] = B_t
         B_variances[t] = cov_B
         AB_variances[t] = cov_A_B
+        all_b[t] = b
+        all_s[t] = s_true
         # AB_estimates[t] = 
         
     end 
 
     ΣΘΘ = AB_variances[end]
     
-    return b, A_estimates, A_variances, B_estimates, B_variances, AB_variances, ΣΘΘ 
+    return all_b, all_s, A_estimates, A_variances, B_estimates, B_variances, AB_variances, ΣΘΘ 
 
     # println(tr(AB_variances[1]))
 

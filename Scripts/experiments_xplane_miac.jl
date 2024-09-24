@@ -3,7 +3,8 @@ include("../XPlane/xplane_miac_tests.jl")
 # include("../Cartpole/cartpole_sysid_tests_partial.jl")
 
 # Initialize dictionaries to store outputs for each seed
-all_b_ends = Dict{Int, Vector{Float16}}()
+all_b = Dict{Int, Vector{Vector{Float16}}}()
+all_s = Dict{Int, Vector{Vector{Float16}}}()
 all_A_estimates = Dict{Int,  Vector{Matrix{Float16}}}()
 all_A_variances = Dict{Int,  Vector{Matrix{Float16}}}()
 all_B_estimates = Dict{Int,  Vector{Matrix{Float16}}}()
@@ -26,10 +27,11 @@ for seed in 1:20
     global pomdp, b0, Σ0
     println("Seed: ", seed)
     
-    b_end_seed, A_estimates_seed, A_variances_seed, B_estimates_seed, B_variances_seed, AB_variances_seed, ΣΘΘ_seed = xplane_sysid(seed, pomdp, b0)
+    b_seed, s_seed, A_estimates_seed, A_variances_seed, B_estimates_seed, B_variances_seed, AB_variances_seed, ΣΘΘ_seed = xplane_sysid(seed, pomdp, b0)
 
     # Store the vector with the seed as the key
-    all_b_ends[seed] = b_end_seed
+    all_b[seed] = b_seed
+    all_s[seed] = s_seed
     all_A_estimates[seed] = A_estimates_seed
     all_A_variances[seed] = A_variances_seed
     all_B_estimates[seed] = B_estimates_seed
@@ -38,7 +40,7 @@ for seed in 1:20
     all_ΣΘΘ[seed] = ΣΘΘ_seed
 
     # Save all dictionaries to a JLD2 file
-    @save "bilqr_xplanefull_miac_results.jld2" all_b_ends all_A_estimates all_A_variances all_B_estimates all_B_variances all_AB_variances all_ΣΘΘ
+    @save "bilqr_xplanefull_miac_results.jld2" all_b all_s all_A_estimates all_A_variances all_B_estimates all_B_variances all_AB_variances all_ΣΘΘ
 end
 
 # # Load the dictionaries from the JLD2 file
