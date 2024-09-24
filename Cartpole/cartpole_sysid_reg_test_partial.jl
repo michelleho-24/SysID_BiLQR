@@ -32,6 +32,7 @@ function regression(seed)
     # List to store estimated mass values over time
     mp_estimated_list = []
     variance_mp_list = []
+    all_s = []
 
     # Loop over iterations
     for t in 1:iters
@@ -57,7 +58,7 @@ function regression(seed)
         x_next, θ_next = o
 
         # Compute observed acceleration
-        x_acc_obs = (dx_next - dx) / pomdp.δt
+        x_acc_obs = ( - dx) / pomdp.δt
 
         sinθ = sin(θ)
         cosθ = cos(θ)
@@ -65,8 +66,8 @@ function regression(seed)
         total_mass = pomdp.mc + mp_true  # Using true mp for calculation
 
         # Simplified linear model for x_acc_obs ≈ c1 * mp + c0
-        c1 = (a[1] * (-1) - pomdp.l * dθ2 * sinθ * (dx_next - dx)) / ((pomdp.mc + mp_true) * pomdp.δt)
-        c0 = (dx_next - dx) / pomdp.δt - a[1] / (pomdp.mc + mp_true)
+        c1 = (a[1] * (-1) - pomdp.l * dθ2 * sinθ * ( - dx)) / ((pomdp.mc + mp_true) * pomdp.δt)
+        c0 = ( - dx) / pomdp.δt - a[1] / (pomdp.mc + mp_true)
 
         # Collect the data for regression
         push!(data_features, [sinθ * dθ2 / total_mass])
@@ -110,8 +111,22 @@ function regression(seed)
         state[5] = b[5]  # Use current estimate of mp
         state[2] = mod(state[2] + π, 2π) - π  # Keep θ within [-π, π]
 
+        push!(all_s, state)
+
     end
     # ΣΘΘ = reshape(b[end-24:end], 5, 5)
     ΣΘΘ = b[end]
-    return b, mp_estimated_list, variance_mp_list, ΣΘΘ
+    return b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s
 end 
+
+# # Final RMSE calculation
+# rmse = sqrt(mean((mp_true - mp_estimated)^2))
+# println("Final Estimated mp = $mp_estimated")
+# println("Final RMSE= $rmse")
+# # Plot the estimated mass over iterations
+# # plot(1:100, mp_estimated_list, label="Estimated Pole Mass", xlabel="Iteration", ylabel="Mass of Pole", legend=:topright)
+# plot(1:100, mp_estimated_list, ribbon=sqrt.(variance_mp_list), label="Estimated mp ± 1 std dev", xlabel="Time Step", ylabel="Estimated mp", title="EKF Estimation of mp")
+# plot!(1:100, fill(mp_true, 100), label="True Mass", linestyle=:dash, linewidth=2, color=:red)
+
+# # Save the plot
+# savefig("mp_est_cartpole_sysid_reg_test.png")

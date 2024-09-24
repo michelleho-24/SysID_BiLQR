@@ -93,7 +93,7 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
         B_variances[t] = cov_B
         AB_variances[t] = cov_A_B
         # AB_estimates[t] = 
-        
+    
     end 
 
     ΣΘΘ = AB_variances[end]

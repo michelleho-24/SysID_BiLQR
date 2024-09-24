@@ -32,6 +32,7 @@ function regression(seed)
     # List to store estimated mass values over time
     mp_estimated_list = []
     variance_mp_list = []
+    all_s = []
 
     # Loop over iterations
     for t in 1:iters
@@ -110,10 +111,12 @@ function regression(seed)
         state[5] = b[5]  # Use current estimate of mp
         state[2] = mod(state[2] + π, 2π) - π  # Keep θ within [-π, π]
 
+        push!(all_s, state)
+
     end
     # ΣΘΘ = reshape(b[end-24:end], 5, 5)
     ΣΘΘ = b[end]
-    return b, mp_estimated_list, variance_mp_list, ΣΘΘ
+    return b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s
 end 
 
 # # Final RMSE calculation

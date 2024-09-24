@@ -39,12 +39,12 @@ function system_identification(seed)
     # Data storage for plotting
     mp_estimates = zeros(num_steps)
     mp_variances = zeros(num_steps)
-    time_steps = collect(1:num_steps)
+    all_s = []
 
     for t in 1:num_steps
 
-        # a, info_dict = bilqr(pomdp, b)
-        a = mpc(pomdp, b, 10)
+        a, info_dict = bilqr(pomdp, b)
+        # a = mpc(pomdp, b, 10)
         # a = [rand() * 20.0 - 10.0]
         
         # Simulate the true next state
@@ -75,10 +75,13 @@ function system_identification(seed)
         
         # Update the true state for the next iteration
         s_true = s_next_true
+
+        # Store the true state for plotting
+        push!(all_s, s_true)
     end
 
     ΣΘΘ = b[end]
     
-    return b, mp_estimates, mp_variances, ΣΘΘ
+    return b, mp_estimates, mp_variances, ΣΘΘ, all_s
 
 end
