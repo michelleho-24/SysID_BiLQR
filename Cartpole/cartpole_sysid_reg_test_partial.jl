@@ -5,7 +5,7 @@ using Random
 using Statistics  # For variance calculation
 using Plots
 # include("../Cartpole/cartpole_sysid.jl")
-include("../Cartpole/cartpole_sysid.jl")
+include("../Cartpole/cartpole_sysid_partial.jl")
 
 function regression(seed)
     Random.seed!(seed)
@@ -54,7 +54,7 @@ function regression(seed)
 
         # Collect data for regression
         x, θ, dx, dθ = state[1:4]
-        x_next, θ_next, dx_next, dθ_next = o
+        x_next, θ_next = o
 
         # Compute observed acceleration
         x_acc_obs = (dx_next - dx) / pomdp.δt
@@ -115,15 +115,3 @@ function regression(seed)
     ΣΘΘ = b[end]
     return b, mp_estimated_list, variance_mp_list, ΣΘΘ
 end 
-
-# # Final RMSE calculation
-# rmse = sqrt(mean((mp_true - mp_estimated)^2))
-# println("Final Estimated mp = $mp_estimated")
-# println("Final RMSE= $rmse")
-# # Plot the estimated mass over iterations
-# # plot(1:100, mp_estimated_list, label="Estimated Pole Mass", xlabel="Iteration", ylabel="Mass of Pole", legend=:topright)
-# plot(1:100, mp_estimated_list, ribbon=sqrt.(variance_mp_list), label="Estimated mp ± 1 std dev", xlabel="Time Step", ylabel="Estimated mp", title="EKF Estimation of mp")
-# plot!(1:100, fill(mp_true, 100), label="True Mass", linestyle=:dash, linewidth=2, color=:red)
-
-# # Save the plot
-# savefig("mp_est_cartpole_sysid_reg_test.png")

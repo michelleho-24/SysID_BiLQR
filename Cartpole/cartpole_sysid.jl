@@ -3,10 +3,10 @@ include("../BiLQR/ilqr_types.jl")
 
 @with_kw mutable struct CartpoleMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
     # reward
-    Q::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 5, 5)
-    R::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 1, 1)
-    # Q = Diagonal([1e-10, 0.1, 1e-10, 0.1, 0.1])
-    # R::Matrix{Float64} = 0.05 * Matrix{Float64}(I, 1, 1)
+    # Q::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 5, 5)
+    # R::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 1, 1)
+    Q = Diagonal([1e-10, 0.1, 1e-10, 0.1, 0.1])
+    R::Matrix{Float64} = 0.05 * Matrix{Float64}(I, 1, 1)
     # Q_N::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 5, 5)
     # Λ::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 5^2, 5^2)
     # Q_N[5, 5] = 1 # overkill 
