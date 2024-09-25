@@ -16,9 +16,7 @@ include("../Baselines/random_policy.jl")
 
 global b, s_true
 
-function system_identification(seed)
-    
-    Random.seed!(seed)
+function system_identification()
 
     # Initialize the Cartpole MDP
     pomdp = CartpoleMDP()
@@ -26,11 +24,14 @@ function system_identification(seed)
     # True mass of the pole (unknown to the estimator)
     mp_true = 2.0  # True mass of the pole
 
+    # huge prior on the mass to begin with, let seed select mass from the Distributions
+
     # Initial true state
     s_true = pomdp.s_init  # [x, θ, dx, dθ, mp]
 
     # Initial belief state
-    Σ0 = Diagonal([0.01, 0.01, 0.01, 0.01, 0.1])  # Initial covariance
+    # Σ0 = Diagonal([0.01, 0.01, 0.01, 0.01, 0.1])  # Initial covariance normally
+    Σ0 = Diagonal([0.1, 0.1, 0.1, 0.1, 1.0])  # Initial covariance
     b = vcat(pomdp.s_init, Σ0[:])  # Belief vector containing mean and covariance
 
     # Simulation parameters

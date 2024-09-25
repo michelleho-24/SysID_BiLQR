@@ -11,9 +11,11 @@ all_s = Dict{Int, Vector{Vector{Float64}}}()
 
 # Run the system identification experiment
 for seed in 1:50
+    Random.seed!(seed)
+
     println("Seed: ", seed)
     
-    b_seed, mp_estimates_seed, mp_variances_seed, ΣΘΘ_seed, s_seed = system_identification(seed)
+    b_seed, mp_estimates_seed, mp_variances_seed, ΣΘΘ_seed, s_seed = system_identification()
 
     # Store the vector with the seed as the key
     all_b[seed] = b_seed

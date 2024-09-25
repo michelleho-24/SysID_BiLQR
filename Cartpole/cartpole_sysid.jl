@@ -15,7 +15,9 @@ include("../BiLQR/ilqr_types.jl")
     Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [0.1]))  
     # println(Λ)
     # start and end positions
-    s_init::Vector{Float64} = [0.0, π/2, 0.0, 0.0, 2.0]
+    mp_prior::Union{Normal, Float64} = Normal(2.0, 1.0)  # Prior on the mass of the pole
+    mp::Float64 = rand(mp_prior)  # Sample the mass of the pole from the prior
+    s_init::Vector{Float64} = [0.0, π/2, 0.0, 0.0, mp]
     s_goal::Vector{Float64} = [s_init..., vec(Matrix{Float64}(I, 5, 5))...]
     
     # mechanics
