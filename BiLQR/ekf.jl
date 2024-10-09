@@ -1,3 +1,4 @@
+
 using POMDPs
 using Random
 using LinearAlgebra
@@ -50,5 +51,3 @@ function ekf(pomdp, b, a, z)
 
     return vcat(m_new, Σ_new[:])
 end
-
-

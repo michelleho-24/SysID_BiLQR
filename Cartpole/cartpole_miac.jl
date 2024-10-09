@@ -1,37 +1,35 @@
 using Parameters
 include("../BiLQR/ilqr_types.jl")
 
-@with_kw mutable struct CartpoleMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
+@with_kw mutable struct CartpoleMDP <: iLQGPOMDP{AbstractVector, AbstractVector, AbstractVector}
     # reward
     Q = Diagonal([1e-10, 0.1, 1e-10, 0.1, 0.1])
     R::Matrix{Float64} = 0.05 * Matrix{Float64}(I, 1, 1)
-    Q_N::Matrix{Float64} = Diagonal([1e-10, 1e-10, 1e-10, 1e-10, 0.1])
-    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [0.1])) 
-    μ0::Vector{Float64} = [0.0, π/2, 0.0, 0.0, 2.0]  # Initial mean 
-    Σ0::Matrix{Float64} = Diagonal([0.5, 0.5, 0.5, 0.5, 1.0])  # Initial covariance
-    b0::Vector{Float64} = [μ0..., Σ0[:]]  # Initial belief vector
-
-    # s_init::Vector{Float64} = [0.0, π/2, 0.0, 0.0, mp]
-    # s_goal::Vector{Float64} = [s_init..., vec(Matrix{Float64}(I, 5, 5))...]
-    
+    Q_N::Matrix{Float64} = Diagonal([1e-10, 0.1, 1e-10, 0.1, 0.1])
+    Λ::Matrix{Float64} = Diagonal(vcat(fill(5e-2, 24), [0.1])) 
+    # start and end positions
+    Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 1.0])
+    b0::MvNormal = MvNormal([0.0, π/2, 0.0, 0.0, 2.0], Σ0)
+    s_init::Vector{Float64} = begin
+        s = rand(b0)
+        s[end] = abs(s[end])  # Ensure the last element is positive
+        s
+    end
+    mp_true::Float64 = s_init[end]
+    s_goal::Vector{Float64} = [s_init..., vec(zeros(5, 5))...]
     # mechanics
     δt::Float64 = 0.1
-    # mp::Float64 = 2.0
     mc::Float64 = 1.0
     g::Float64 = 9.81
     l::Float64 = 1.0
-
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-2 * Matrix{Float64}(I, 4, 4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-2, 4), [0.0])) 
-    
-    # basically fully observable - no noise in the observation
-    W_obs::Matrix{Float64} = 1e-6 * Matrix{Float64}(I, 4, 4)
+    W_state_process::Matrix{Float64} = 1e-3 * I(4)
+    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
+    W_obs::Matrix{Float64} = 1e-4 * I(4)
 end
 
 function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
-    x, θ, dx, dθ, log_mp = s
-    mp = exp(log_mp)
+    x, θ, dx, dθ, mp = s
     sinθ, cosθ = sin(θ), cos(θ)
     h = p.mc + mp * (sinθ^2)
     ds = [
@@ -42,9 +40,13 @@ function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
         0.0
     ]
 
+    # ds[2] = (ds[2] + π) % (2 * π) - π
+
     # need to bound s[1] between -4.8 and 4.8, s[2] between -pi and pi
     s_new = s + p.δt * ds
-    s_new[2] = mod(s_new[2] + π, 2π) - π
+    # s_new[1] = clamp(s_new[1], -4.8, 4.8)
+    # s_new[2] = clamp(s_new[2], -pi, pi)
+    # s_new[2] = 
 
     return s_new
 end
@@ -55,10 +57,14 @@ obs_noise(p::CartpoleMDP, sp::AbstractVector) = p.W_obs
 num_states(p::CartpoleMDP) = 5
 num_actions(p::CartpoleMDP) = 1
 num_observations(p::CartpoleMDP) = 4
-num_sysvars(p::CartpoleMDP) = 1
 
 """Return a tuple of the Cartesian positions of the cart and the counterweight"""
 function visualize(p::CartpoleMDP, s::AbstractVector) 
     return ([s[1], 0.], [s[1]+p.l*sin(s[2]), p.l*cos(s[2])])
+end
+
+function isvalidstate(p::CartpoleMDP, s::AbstractVector)
+    x, θ, dx, dθ, mp = s
+    return -4.8 <= x <= 4.8 && -pi <= θ <= pi
 end
 

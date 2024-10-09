@@ -1,31 +1,43 @@
 using JLD2
 # include("../Cartpole/cartpole_sysid_tests.jl")
-include("../Cartpole/cartpole_sysid_tests.jl")
+include("../Cartpole/cartpole_miac_tests_full.jl")
 
 # Initialize dictionaries to store outputs for each seed
-all_b = Dict{Int, Vector{Float64}}()
+all_b = Dict{Int, Vector{Vector{Float64}}}()
 all_mp_estimates = Dict{Int, Vector{Float64}}()
 all_mp_variances = Dict{Int, Vector{Float64}}()
 all_ΣΘΘ = Dict{Int, Float64}()
 all_s = Dict{Int, Vector{Vector{Float64}}}()
+all_u = Dict{Int, Vector{Vector{Float64}}}()
+all_mp_true = Dict{Int, Float64}()
 
 # Run the system identification experiment
 for seed in 1:50
-    Random.seed!(seed)
-
+    if seed == 13 || seed == 21 || seed == 30
+        continue
+    end
+    # not 11 full 
+    # 3, 5, 13, 30, 43, 46, 56, (random miac & sysid partial) 
+    # 21, 22, 29 for miac partial bilqr - up to 58 
+    # 3, 22, 37, 56 for sysid partial bilqr
+    # 4, 13, 30 , 37, 56 for miac partial mpc 
+    # 17 for cartpole sysid full
     println("Seed: ", seed)
     
-    b_seed, mp_estimates_seed, mp_variances_seed, ΣΘΘ_seed, s_seed = system_identification()
-
+    b_seed, mp_estimates_seed, mp_variances_seed, ΣΘΘ_seed, s_seed, u_seed, mp_true_seed = system_identification(seed)
+    
     # Store the vector with the seed as the key
     all_b[seed] = b_seed
     all_mp_estimates[seed] = mp_estimates_seed
     all_mp_variances[seed] = mp_variances_seed
     all_ΣΘΘ[seed] = ΣΘΘ_seed
     all_s[seed] = s_seed
+    all_u[seed] = u_seed
+    all_mp_true[seed] = mp_true_seed
+
 
     # Save all dictionaries to a JLD2 file
-    @save "bilqr_cartpolefull_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s
+    @save "mpcreg_cartpolefull_miac_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true
 end
 
 # # Load the dictionaries from the JLD2 file

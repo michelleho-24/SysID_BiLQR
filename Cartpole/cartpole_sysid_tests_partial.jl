@@ -10,9 +10,9 @@ include("../BiLQR/ilqr_types.jl")
 include("cartpole_sysid_partial.jl")
 include("../BiLQR/bilqr.jl")
 include("../BiLQR/ekf.jl")
-include("../Baselines/MPC.jl")
+# include("../Baselines/MPC.jl")
 include("../Baselines/random_policy.jl")
-# include("../Baselines/Regression.jl")
+include("../Baselines/Regression.jl")
 
 global b, s_true
 
@@ -26,13 +26,10 @@ function system_identification(seed)
     # True mass of the pole (unknown to the estimator)
     mp_true = 2.0  # True mass of the pole
 
-    # Initial true state
-    s_true = pomdp.s_init  # [x, θ, dx, dθ, mp]
-
-    # Initial belief state
-    Σ0 = Diagonal([0.01, 0.01, 0.01, 0.01, 0.1])  # Initial covariance
-    b = vcat(pomdp.s_init, Σ0[:])  # Belief vector containing mean and covariance
-
+    # define initial distribution for total belief state 
+    s_true = pomdp.s_init
+    
+    b = vcat(s_true[1:4], pomdp.mp_true, pomdp.Σ0[:])
     # Simulation parameters
     num_steps = 100
 
@@ -40,14 +37,22 @@ function system_identification(seed)
     mp_estimates = zeros(num_steps)
     mp_variances = zeros(num_steps)
     all_s = []
-
+    all_b = []
+    all_u = []
 
     for t in 1:num_steps
 
-        # a = mpc(pomdp, b,10)
-        # a = [rand() * 20.0 - 10.0]
-        a, info_dict = bilqr(pomdp, b)
+        # Store the true state for plotting
+        push!(all_s, s_true)
+        push!(all_b, b)
+
+        # a, info_dict = bilqr(pomdp, b)
+        # a = mpc(pomdp, b, 10)
+        a = random_policy(pomdp, b)
+        # b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s = regression(pomdp, b)
+        # return b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s
         
+        push!(all_u, a)
         # Simulate the true next state
         s_next_true = dyn_mean(pomdp, s_true, a)
         
@@ -83,6 +88,6 @@ function system_identification(seed)
 
     ΣΘΘ = b[end]
     
-    return b, mp_estimates, mp_variances, ΣΘΘ, all_s
+    return all_b, mp_estimates, mp_variances, ΣΘΘ, all_s, all_u, pomdp.mp_true 
 
 end

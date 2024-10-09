@@ -13,11 +13,11 @@ function regression(seed)
     # Initialize variables
     pomdp = CartpoleMDP()
 
-    Σ0 = 0.01 * Matrix{Float64}(I, num_states(pomdp), num_states(pomdp))
-    # Increase uncertainty for mp
-    Σ0[end, end] = 0.1
-    b0 = [pomdp.s_init...; vec(Σ0)...]
-    b = b0
+    # Σ0 = 0.01 * Matrix{Float64}(I, num_states(pomdp), num_states(pomdp))
+    # # Increase uncertainty for mp
+    # Σ0[end, end] = 0.1
+    # b0 = [pomdp.s_init...; vec(Σ0)...]
+    # b = b0
 
     iters = 200
     state = copy(pomdp.s_init)
