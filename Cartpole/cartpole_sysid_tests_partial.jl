@@ -10,28 +10,25 @@ include("../BiLQR/ilqr_types.jl")
 include("cartpole_sysid_partial.jl")
 include("../BiLQR/bilqr.jl")
 include("../BiLQR/ekf.jl")
-# include("../Baselines/MPC.jl")
+include("../Baselines/MPC.jl")
 include("../Baselines/random_policy.jl")
 include("../Baselines/Regression.jl")
 
 global b, s_true
 
-function system_identification(seed)
+function system_identification(seed, method)
     
     Random.seed!(seed)
 
     # Initialize the Cartpole MDP
     pomdp = CartpoleMDP()
 
-    # True mass of the pole (unknown to the estimator)
-    mp_true = 2.0  # True mass of the pole
-
     # define initial distribution for total belief state 
     s_true = pomdp.s_init
     
-    b = vcat(s_true[1:4], pomdp.mp_true, pomdp.Σ0[:])
+    b = vcat(s_true[1:end - num_sysvars(pomdp)], pomdp.mp_true, pomdp.Σ0[:])
     # Simulation parameters
-    num_steps = 100
+    num_steps = 50
 
     # Data storage for plotting
     mp_estimates = zeros(num_steps)
@@ -46,13 +43,33 @@ function system_identification(seed)
         push!(all_s, s_true)
         push!(all_b, b)
 
+        if method == "bilqr"
+            results = bilqr(pomdp, b)
+            if results === nothing
+                return nothing
+            else 
+                a, info_dict = results
+            end
+        elseif method == "mpc"
+            a = mpc(pomdp, b, 10)
+        elseif method == "random"
+            a = random_policy(pomdp, b)
+        elseif method == "regression" || method == "mpcreg"
+            all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true = regression(pomdp, b)
+            return all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true
+        end 
+
         # a, info_dict = bilqr(pomdp, b)
+        # if a == nothing
+        #     break
+        # end
         # a = mpc(pomdp, b, 10)
-        a = random_policy(pomdp, b)
-        # b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s = regression(pomdp, b)
-        # return b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s
-        
+        # a = random_policy(pomdp, b)
+        # all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true = regression(pomdp, b)
+        # return all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true
+
         push!(all_u, a)
+        
         # Simulate the true next state
         s_next_true = dyn_mean(pomdp, s_true, a)
         
@@ -70,6 +87,9 @@ function system_identification(seed)
         
         # Use your ekf function to update the belief
         b = ekf(pomdp, b, a, z)
+        if b === nothing
+            return nothing
+        end
         
         # Extract the mean and covariance from belief
         m = b[1:num_states(pomdp)]
@@ -88,6 +108,6 @@ function system_identification(seed)
 
     ΣΘΘ = b[end]
     
-    return all_b, mp_estimates, mp_variances, ΣΘΘ, all_s, all_u, pomdp.mp_true 
+    return all_b, mp_estimates, mp_variances, ΣΘΘ, all_s, all_u, pomdp.mp_true
 
 end

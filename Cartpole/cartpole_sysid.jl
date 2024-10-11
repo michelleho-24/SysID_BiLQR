@@ -3,10 +3,10 @@ include("../BiLQR/ilqr_types.jl")
 
 @with_kw mutable struct CartpoleMDP <: iLQGPOMDP{AbstractVector, AbstractVector, AbstractVector}
     # reward
-    Q::Matrix{Float64} = 1e-6 * I(5)
-    R::Matrix{Float64} = 1e-6 * I(1)
+    Q::Matrix{Float64} = 1e-10 * I(5)
+    R::Matrix{Float64} = 1e-10 * I(1)
     Q_N::Matrix{Float64} = Diagonal([1e-10, 1e-10, 1e-10, 1e-10, 0.1])
-    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [0.1]))  
+    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [1]))  
     # start and end positions
     # mp_true::Float64 = 2.0
     Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 1.0])
@@ -24,8 +24,8 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-3 * I(4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
+    W_state_process::Matrix{Float64} = 1e-2 * I(4)
+    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-2, 4), [0.0]))  
     W_obs::Matrix{Float64} = 1e-4 * I(4)
 end
 
@@ -58,6 +58,7 @@ obs_noise(p::CartpoleMDP, sp::AbstractVector) = p.W_obs
 num_states(p::CartpoleMDP) = 5
 num_actions(p::CartpoleMDP) = 1
 num_observations(p::CartpoleMDP) = 4
+num_sysvars(p::CartpoleMDP) = 1
 
 """Return a tuple of the Cartesian positions of the cart and the counterweight"""
 function visualize(p::CartpoleMDP, s::AbstractVector) 

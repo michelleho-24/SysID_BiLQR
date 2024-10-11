@@ -37,6 +37,11 @@ function ekf(pomdp, b, a, z)
     # Compute the innovation covariance
     S = C * Σ_pred * C' + W_obs
 
+    if any(isnan, S) || abs(det(S)) < 1e-12
+        println("S is nan, next seed...")
+        return nothing
+    end
+
     # Compute the Kalman Gain
     K = Σ_pred * C' * inv(S)
 

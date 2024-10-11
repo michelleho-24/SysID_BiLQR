@@ -23,8 +23,8 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-3 * I(4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
+    W_state_process::Matrix{Float64} = 1e-1 * I(4)
+    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-1, 4), [0.0]))  
     W_obs::Matrix{Float64} = 1e-4 * I(4)
 end
 
@@ -57,6 +57,7 @@ obs_noise(p::CartpoleMDP, sp::AbstractVector) = p.W_obs
 num_states(p::CartpoleMDP) = 5
 num_actions(p::CartpoleMDP) = 1
 num_observations(p::CartpoleMDP) = 4
+num_sysvars(p::CartpoleMDP) = 1
 
 """Return a tuple of the Cartesian positions of the cart and the counterweight"""
 function visualize(p::CartpoleMDP, s::AbstractVector) 

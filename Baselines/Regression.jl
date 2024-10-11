@@ -7,7 +7,7 @@ using Plots
 include("MPC.jl")
 # include("../Cartpole/cartpole_sysid.jl")
 
-function regression(pomdp, b)
+function regression(pomdp, b, method)
 
     iters = 200
     state = copy(pomdp.s_init)
@@ -31,10 +31,15 @@ function regression(pomdp, b)
         push!(all_s, state)
         push!(all_b, b)
 
+        if method == "mpcreg"
+            a = mpc(pomdp, b, 10)  # MPC action
+        else 
+            a = random_policy(pomdp,b)
+        end
+
         # global state, b, mp_estimated 
         # Select an action (e.g., random force between -10 and 10)
         # a = random_policy(pomdp,b)  # Random action between -10 and 10
-        a = mpc(pomdp, b, 10)  # MPC action
 
         push!(all_u, a)
 

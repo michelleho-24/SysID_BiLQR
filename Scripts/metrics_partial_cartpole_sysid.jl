@@ -1,71 +1,81 @@
 using Statistics 
 using JLD2
 using LinearAlgebra
+using Plots
+using LaTeXStrings
 
 Σ_true = 2.0
 
 function rmse(P_pred, P_true = Σ_true)
-    # Ensure both matrices are square and diagonal
-    # P_pred = Diagonal(P_pred)
     @assert size(P_pred) == size(P_true) "Matrices must have the same size"
-    
-    # Extract diagonal elements
-    # diag_pred = diagm(P_pred)
-    # diag_true = diagm(P_true)
     diag_pred = P_pred
     diag_true = P_true
-    
-    # Compute the squared differences
     squared_diff = (diag_pred .- diag_true).^2
-    
-    # Compute the mean squared error (MSE)
     mse = mean(squared_diff)
-    
-    # Compute and return the root mean squared error (RMSE)
     return sqrt(mse)
 end
 
-@load "bilqr_cartpolepartial_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ
+function log_prob_gaussian(x, mean, variance)
+    return -0.5 * log(2 * π * variance) - 0.5 * ((x - mean)^2 / variance)
+end
 
-# find average trace and std
-# trace_bilqr_avg = mean([tr(ΣΘΘ) for ΣΘΘ in all_ΣΘΘ])
-# trace_bilqr_std = std([tr(ΣΘΘ) for ΣΘΘ in all_ΣΘΘ])
+# Define the number of time steps
+t = 50
+plotting_seed = 1
+time_steps = collect(1:t)
 
-trace_bilqr_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
-trace_bilqr_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
-
-# find average rmse and std
-rmse_bilqr_avg = mean([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-rmse_bilqr_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-
-println("BILQR Trace: ", trace_bilqr_avg, " ± ", trace_bilqr_std/length(all_ΣΘΘ))
-println("BiLQR RMSE: ", rmse_bilqr_avg, " ± ", rmse_bilqr_std/length(all_ΣΘΘ))
-
-@load "random_cartpolepartial_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ
+@load "random_cartpolepartial_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true 
 
 trace_random_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_random_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
+trace_random_ste = trace_random_std/sqrt(length(all_ΣΘΘ))
 
 rmse_random_avg = mean([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
 rmse_random_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
+rmse_random_ste = rmse_random_std/sqrt(length(all_ΣΘΘ))
 
-println("Random Trace: ", trace_random_avg, " ± ", trace_random_std/length(all_ΣΘΘ))
-println("Random RMSE: ", rmse_random_avg, " ± ", rmse_random_std/length(all_ΣΘΘ))
+log_probs_random = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
+plot(time_steps, log_probs_random, label="EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
 
-# @load "regression_cartpolepartial_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ
+last_log_probs_random = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates)  if haskey(all_mp_estimates, seed)]
 
-# trace_regression_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
-# trace_regression_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
+# Calculate the average and standard deviation
+avg_last_log_prob_random = mean(last_log_probs_random)
+std_last_log_prob_random = std(last_log_probs_random)
 
-# rmse_regression_avg = mean([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-# rmse_regression_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
+@load "bilqr_cartpolepartial_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true 
 
-# println("Regression Trace: ", trace_regression_avg, " ± ", trace_regression_std/length(all_ΣΘΘ))
-# println("Regression RMSE: ", rmse_regression_avg, " ± ", rmse_regression_std/length(all_ΣΘΘ))
+trace_bilqr_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
+trace_bilqr_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
+trace_bilqr_ste = trace_bilqr_std/sqrt(length(all_ΣΘΘ))
 
-# # Plot the estimated mass of the pole over time
-# plot(time_steps, mp_estimates, ribbon=sqrt.(mp_variances), label="Estimated mp ± 1 std dev", xlabel="Time Step", ylabel="Estimated mp", title="EKF Estimation of mp")
-# hline!([mp_true], label="True mp", linestyle=:dash)
+rmse_bilqr_avg = mean([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
+rmse_bilqr_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
+rmse_bilqr_ste = rmse_bilqr_std/sqrt(length(all_ΣΘΘ))
 
-# # Show the plot
-# savefig("time_mp.png")  
+log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[1][i]) for i in 1:t]
+plot!(time_steps, log_probs_bilqr, label="BiLQR")
+
+last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates)  if haskey(all_mp_estimates, seed)]
+
+# Calculate the average and standard deviation
+avg_last_log_prob_bilqr = mean(last_log_probs_bilqr)
+std_last_log_prob_bilqr = std(last_log_probs_bilqr)
+
+println("Trace of ΣΘΘ")
+println("BILQR: ", trace_bilqr_avg, " ± ", trace_bilqr_ste)
+println("Random: ", trace_random_avg, " ± ", trace_random_ste)
+
+println("RMSE of ΣΘΘ")
+println("BiLQR: ", rmse_bilqr_avg, " ± ", rmse_bilqr_ste)
+println("Random: ", rmse_random_avg, " ± ", rmse_random_ste)
+
+println("Average End Log Probabilities")
+println("BiLQR: ", avg_last_log_prob_bilqr, " ± ", std_last_log_prob_bilqr)
+println("Random: ", avg_last_log_prob_random, " ± ", std_last_log_prob_random)
+
+# hline!([all_mp_true[plotting_seed ]], label="True mass", linestyle=:dash)
+
+# Set default DPI and save the plot
+default(dpi=1000)
+savefig("time_mp.png")

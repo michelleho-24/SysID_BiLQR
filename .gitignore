@@ -1,3 +1,4 @@
 # ignore png files 
 *.png
-results/
+results*
+*.txt

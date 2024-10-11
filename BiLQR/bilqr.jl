@@ -17,7 +17,12 @@ end
 
 function sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix)
     Ct = ForwardDiff.jacobian(x -> obs_mean(pomdp,x), x)
-    K = Σ * Ct' * inv(Ct * Σ * Ct' + obs_noise(pomdp, x))
+    S = Ct * Σ * Ct' + obs_noise(pomdp, x)
+    if any(isnan, S) || abs(det(S)) < 1e-12
+        println("S is nan, next seed...")
+        return nothing
+    end
+    K = Σ * Ct' * inv(S)
     return (I - K * Ct) * Σ
     # Sigma - Sigma C' inv() C Sigma 
 end
@@ -32,6 +37,10 @@ function update_belief(pomdp::iLQGPOMDP, belief::AbstractVector, u::AbstractVect
     x_new = dyn_mean(pomdp, x, u)
     Σ_pred = sigma_pred(pomdp, x,u,Σ)
     Σ_new = sigma_update(pomdp, x_new, Σ_pred)
+
+    if Σ_new === nothing
+        return nothing
+    end
 
     return form_belief_vector(x_new,Σ_new)
 end
@@ -99,7 +108,11 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
     s_bar[1, :] = b0
 
     for k in 1:N
-        s_bar[k+1, :] = f(pomdp, s_bar[k, :], u_bar[k, :])
+        next_belief = f(pomdp, s_bar[k, :], u_bar[k, :])
+        if next_belief === nothing
+            return nothing  # Or handle this in another way, e.g., skip the seed
+        end
+        s_bar[k+1, :] = next_belief
     end
 
     ds = zeros(Float64, N+1, q)
@@ -140,7 +153,11 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
         s_bar_prev = copy(s_bar)
         for k in 1:N
             du[k, :] = Y[k, :, :] * ds[k, :] + y[k, :]
-            s_bar[k+1, :] = f(pomdp, s_bar[k, :], u_bar[k, :] + du[k, :])
+            next_belief = f(pomdp, s_bar[k, :], u_bar[k, :] + du[k, :])
+            if next_belief === nothing
+                return nothing
+            end 
+            s_bar[k+1, :] = next_belief
             u_bar[k, :] += du[k, :]
             ds[k+1, :] = s_bar[k+1, :] - s_bar_prev[k+1, :]
         end
