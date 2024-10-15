@@ -22,7 +22,11 @@ function sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix)
         println("S is nan, next seed...")
         return nothing
     end
+
+    # check if this line needs obs noise 
     K = Σ * Ct' * inv(S)
+
+    # check this line 
     return (I - K * Ct) * Σ
     # Sigma - Sigma C' inv() C Sigma 
 end
