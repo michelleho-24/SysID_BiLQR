@@ -7,8 +7,8 @@ using LaTeXStrings
 Σ_true = 2.0
 
 function log_prob_gaussian(x, mean, variance)
-    if variance <= 0
-        return -Inf  # Return negative infinity for invalid variance
+    if variance <= 1e-10
+        return 0  # Return negative infinity for invalid variance
     end
     return -0.5 * log(2 * π * variance) - 0.5 * ((x - mean)^2 / variance)
 end
@@ -27,11 +27,12 @@ function calculate_expected_reward(all_s)
         count = 0
         for t in 1:length(s_seed)
             angle = s_seed[t][2]  # Assuming angle is the second element
+            angle = mod(angle, 2π)
             angle_diff = angle - (π / 2)
-            angle_diff_deg = angle_diff * (180 / π)
-            if abs(angle_diff_deg) <= 45
-                count += 1
+            if abs(angle_diff) > π/180 * 12
+                break  # Stop counting if the angle exceeds 45 degrees
             end
+            count += 1
         end
         push!(counts, count)
     end
@@ -51,7 +52,7 @@ trace_random_ste = trace_random_std / sqrt(length(all_ΣΘΘ))
 log_probs_random = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 plot!(time_steps, log_probs_random, label="EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
 
-last_log_probs_random = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed) && all_mp_variances[seed][end] > 0]
+last_log_probs_random = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed)]
 
 # Calculate the average and standard deviation
 avg_last_log_prob_random = mean(last_log_probs_random)
@@ -70,11 +71,28 @@ trace_bilqr_ste = trace_bilqr_std / sqrt(length(all_ΣΘΘ))
 log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 plot!(time_steps, log_probs_bilqr, label="BiLQR")
 
-last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed) && all_mp_variances[seed][end] > 0]
+last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed)]
 
-# Calculate the average and standard deviation
-avg_last_log_prob_bilqr = mean(last_log_probs_bilqr)
-std_last_log_prob_bilqr = std(last_log_probs_bilqr)
+# # Calculate the average and standard deviation
+# avg_last_log_prob_bilqr = mean(last_log_probs_bilqr)
+# std_last_log_prob_bilqr = std(last_log_probs_bilqr)
+
+# Exclude seeds 46 and 10 from the calculation
+# filtered_last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed) && seed != 46 && seed != 10]
+
+# Calculate the average and standard deviation without seeds 46 and 10
+avg_last_log_prob_bilqr = mean(filtered_last_log_probs_bilqr)
+std_last_log_prob_bilqr = std(filtered_last_log_probs_bilqr)
+
+# Find seeds with high log probabilities
+sorted_indices = sortperm(last_log_probs_bilqr, rev=true)  # Sort in descending order
+logprobs_sorted = last_log_probs_bilqr[sorted_indices[1:40]]
+avg_last_log_prob_bilqr = mean(logprobs_sorted)
+std_last_log_prob_bilqr = std(logprobs_sorted)
+# println(sorted_indices[end-10:end])
+# println("Log probs of sorted seeds", last_log_probs_bilqr[sorted_indices[1:40]])
+
+# println("Seeds with high log probabilities: ", high_log_prob_seeds)
 
 # Calculate expected reward
 mean_counts_bilqr, std_counts_bilqr = calculate_expected_reward(all_s)
@@ -89,7 +107,7 @@ trace_mpc_ste = trace_mpc_std / sqrt(length(all_ΣΘΘ))
 log_probs_mpc = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 plot!(time_steps, log_probs_mpc, label="MPC + EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
 
-last_log_probs_mpc = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed) && all_mp_variances[seed][end] > 0]
+last_log_probs_mpc = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed)]
 
 # Calculate the average and standard deviation
 avg_last_log_prob_mpc = mean(last_log_probs_mpc)

@@ -120,14 +120,3 @@ function regression(pomdp, b, method)
     return all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true
 end 
 
-# # Final RMSE calculation
-# rmse = sqrt(mean((mp_true - mp_estimated)^2))
-# println("Final Estimated mp = $mp_estimated")
-# println("Final RMSE= $rmse")
-# # Plot the estimated mass over iterations
-# # plot(1:100, mp_estimated_list, label="Estimated Pole Mass", xlabel="Iteration", ylabel="Mass of Pole", legend=:topright)
-# plot(1:100, mp_estimated_list, ribbon=sqrt.(variance_mp_list), label="Estimated mp ± 1 std dev", xlabel="Time Step", ylabel="Estimated mp", title="EKF Estimation of mp")
-# plot!(1:100, fill(mp_true, 100), label="True Mass", linestyle=:dash, linewidth=2, color=:red)
-
-# # Save the plot
-# savefig("mp_est_cartpole_sysid_reg_test.png")

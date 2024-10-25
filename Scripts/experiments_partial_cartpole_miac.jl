@@ -1,6 +1,6 @@
 using JLD2
 # include("../Cartpole/cartpole_sysid_tests.jl")
-include("../Cartpole/cartpole_sysid_tests_partial.jl")
+include("../Cartpole/cartpole_miac_tests_partial.jl")
 
 # Initialize dictionaries to store outputs for each seed
 all_b = Dict{Int, Vector{Vector{Float64}}}()
@@ -13,7 +13,7 @@ all_mp_true = Dict{Int, Float64}()
 
 method = "random"
 
-jld2_file = "test_$(method)_cartpolepartial_sysid_results.jld2"
+jld2_file = "test_$(method)_cartpolepartial_miac_results.jld2"
 if isfile(jld2_file)
     @load jld2_file all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true
 end

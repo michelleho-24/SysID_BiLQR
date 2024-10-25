@@ -26,13 +26,17 @@ function system_identification(seed, method)
     # define initial distribution for total belief state 
     s_true = pomdp.s_init
     
+    # remember Σ0 now is a vector of diagonal elements of covariance matrix (not vector of all elements in covariance matrix)
     b = vcat(s_true[1:end - num_sysvars(pomdp)], pomdp.mp_true, pomdp.Σ0[:])
     # Simulation parameters
     num_steps = 50
 
     # Data storage for plotting
-    mp_estimates = zeros(num_steps)
-    mp_variances = zeros(num_steps)
+    mp_estimates = []
+    mp_variances = []
+    push!(mp_estimates, b[num_states(pomdp)])
+    push!(mp_variances, b[end - 1])
+
     all_s = []
     all_b = []
     all_u = []
@@ -96,8 +100,8 @@ function system_identification(seed, method)
         Σ = reshape(b[num_states(pomdp) + 1:end], num_states(pomdp), num_states(pomdp))
         
         # Store estimates
-        mp_estimates[t] = m[num_states(pomdp)]
-        mp_variances[t] = Σ[num_states(pomdp), num_states(pomdp)]
+        push!(mp_estimates,m[num_states(pomdp)])
+        push!(mp_variances,Σ[num_states(pomdp), num_states(pomdp)])
         
         # Update the true state for the next iteration
         s_true = s_next_true

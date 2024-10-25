@@ -1,6 +1,7 @@
 using Parameters
 using LinearAlgebra
 using SparseArrays
+using Distributions
 include("../BiLQR/ilqr_types.jl")
 
 # from Josh's paper: 
@@ -18,19 +19,25 @@ include("../BiLQR/ilqr_types.jl")
 
 @with_kw mutable struct XPlanePOMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
     
-    Q::Matrix{Float16} = 1e-6 * Matrix{Float16}(I, 96, 96)
-    R::Matrix{Float16} = 1e-6 * Matrix{Float16}(I, 3, 3)
-    # Q_N::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 11, 11)
-    # Λ::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 121, 121)
-    Q_N::Matrix{Float16} = Diagonal(vcat(fill(1e-10, 8), fill(0.1, 88)))
-    # Λ::Matrix{Float16} = Diagonal(vec([i ≥ 12 && j ≥ 12 ? 0.1 : 1e-10 for i in 1:165, j in 1:165])) # total 165^2
-    Λ::Matrix{Float16} = spdiagm(0 => vec([i ≥ 9 && j ≥ 9 ? 1.0 : 1e-10 for i in 1:96, j in 1:96])) # total 96^2
-    # start and end positions
-    s_init::Vector{Float16} = vcat([0.0, 1000.0, pi/2.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-                                   vec(0.01 * Matrix{Float16}(I, 8, 8)), 
-                                   vec(0.01 * Matrix{Float16}(ones(8, 3))))
-    
-    s_goal::Vector{Float16} = vcat(s_init ..., vec(Matrix{Float16}(I, 96, 96))...)
+    Q::Matrix{Float16} = 1e-5 * I(24)
+    R::Matrix{Float16} = 1e-5 * I(3)
+    Q_N::Matrix{Float16} = diagm(vcat(fill(1e-5, 8), fill(0.1, 16))) # 24 variables
+    Λ::Matrix{Float16} = diagm(vcat(fill(1e-5, 8), fill(1, 16)))  # diagonalized \Sigma only has 24 variables, 24 x 24 matrix
+
+    # Σ0::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 8), fill(2, 16)))
+    Σ0::Vector{Float64} = vcat(fill(1e-5, 8), fill(2, 16))
+    b0::MvNormal = MvNormal(
+        vcat([0.0, 1000.0, pi/2.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
+             [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0], # A diagonal means 
+             [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]), # B first column means 
+        Σ0)
+    s_init::Vector{Float64} = rand(b0)
+    # A_true::Matrix{Float64} = Diagonal(s_init[8:15])
+    # B_true::Matrix{Float64} = hcat(s_init[16:end], ones(8, 2))
+    AB_true::Vector{Float64} = vcat(s_init[8:end])
+
+    # move to new x position, keep same height, and same angle of attack 
+    s_goal::Vector{Float64} = vcat([5000], s_init[2:end] ..., vec(zeros(24))...)
     
     # mechanics
     m::Float16 = 6500.0
@@ -39,29 +46,28 @@ include("../BiLQR/ilqr_types.jl")
     δt::Float16 = 0.1
 
     # noise
-    W_state_process::Matrix{Float16} = 1e-4 * Matrix{Float16}(I, 8, 8)
-    W_process::Matrix{Float16} = Diagonal(vcat(fill(1e-4, 8), 
-                                               vec(0.0 * Matrix{Float16}(I, 8, 8)), 
-                                               vec(0.0 * Matrix{Float16}(ones(8, 3)))))
+    W_state_process::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 8, 8)
+    W_process::Matrix{Float16} = Diagonal(vcat(fill(1e-3, 8), 
+                                            fill(0, 8), 
+                                            fill(0, 8)) )
     W_obs::Matrix{Float16} = 1e-2 * Matrix{Float16}(I, 8, 8)
 end
 
 function dyn_mean(p::XPlanePOMDP, s::AbstractVector, a::AbstractVector)
     # Ax + Bu = x_new, A' = A, B' = B
 
-    s_true, A_vec, B_vec = s[1:8], s[9:8^2+8], s[8^2+8+1:end]
-    A = reshape(A_vec, 8, 8)
-    B = reshape(B_vec, 8, 3)
+    s_true = s[1:8]
+    A = s[9:16]
+    B = s[17:end]
 
-    s_new = A * s_true + B * a
-    return vcat(s_new, A_vec, B_vec)
+    s_new = Diagonal(A) * s_true + hcat(B, ones(8,2)) * a
+    return vcat(s_new, A, B)
 end
 
 dyn_noise(p::XPlanePOMDP, s::AbstractVector, a::AbstractVector) = p.W_process
 obs_mean(p::XPlanePOMDP, sp::AbstractVector) = sp[1:8]
 obs_noise(p::XPlanePOMDP, sp::AbstractVector) = p.W_obs
-num_states(p::XPlanePOMDP) = 8 + 8^2 + 8*3
+num_states(p::XPlanePOMDP) = 8 + 8 + 8 
 num_actions(p::XPlanePOMDP) = 3
 num_observations(p::XPlanePOMDP) = 8
-
-mdp = XPlanePOMDP()
+num_sysvars(p::XPlanePOMDP) = 8 + 8

@@ -15,6 +15,30 @@ t = 50
 plotting_seed = 6
 time_steps = collect(1:t)
 
+# # Helper function to calculate the expected reward
+# function calculate_expected_reward(all_s)
+#     counts = []
+
+#     for seed in keys(all_s)
+#         s_seed = all_s[seed]
+#         count = 0
+#         for t in 1:length(s_seed)
+#             angle = s_seed[t][2]  # Assuming angle is the second element
+#             angle = mod(angle, 2π)
+#             angle_diff = angle - (π / 2)
+#             if abs(angle_diff) > π/4 
+#                 break  # Stop counting if the angle exceeds 45 degrees
+#             end
+#             count += 1
+#         end
+#         push!(counts, count)
+#     end
+
+#     mean_count = mean(counts)
+#     std_count = std(counts)
+#     return mean_count, std_count
+# end
+
 # Helper function to calculate the expected reward
 function calculate_expected_reward(all_s)
     counts = []
@@ -24,11 +48,12 @@ function calculate_expected_reward(all_s)
         count = 0
         for t in 1:length(s_seed)
             angle = s_seed[t][2]  # Assuming angle is the second element
+            angle = mod(angle, 2π)
             angle_diff = angle - (π / 2)
-            angle_diff_deg = angle_diff * (180 / π)
-            if abs(angle_diff_deg) <= 45
-                count += 1
+            if abs(angle_diff) > π/4 
+                break  # Stop counting if the angle exceeds 45 degrees
             end
+            count += 1
         end
         push!(counts, count)
     end

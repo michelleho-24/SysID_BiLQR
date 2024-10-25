@@ -23,8 +23,8 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-1 * I(4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-1, 4), [0.0]))  
+    W_state_process::Matrix{Float64} = 1e-3 * I(4)
+    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
     W_obs::Matrix{Float64} = 1e-4 * I(4)
 end
 

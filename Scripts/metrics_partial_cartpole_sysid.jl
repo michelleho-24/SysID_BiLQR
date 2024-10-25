@@ -35,7 +35,7 @@ rmse_random_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
 rmse_random_ste = rmse_random_std/sqrt(length(all_ΣΘΘ))
 
 log_probs_random = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
-plot(time_steps, log_probs_random, label="EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
+# plot(time_steps, log_probs_random, label="EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
 
 last_log_probs_random = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates)  if haskey(all_mp_estimates, seed)]
 
@@ -54,7 +54,7 @@ rmse_bilqr_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
 rmse_bilqr_ste = rmse_bilqr_std/sqrt(length(all_ΣΘΘ))
 
 log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[1][i]) for i in 1:t]
-plot!(time_steps, log_probs_bilqr, label="BiLQR")
+# plot!(time_steps, log_probs_bilqr, label="BiLQR")
 
 last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates)  if haskey(all_mp_estimates, seed)]
 
@@ -76,6 +76,6 @@ println("Random: ", avg_last_log_prob_random, " ± ", std_last_log_prob_random)
 
 # hline!([all_mp_true[plotting_seed ]], label="True mass", linestyle=:dash)
 
-# Set default DPI and save the plot
-default(dpi=1000)
-savefig("time_mp.png")
+# # Set default DPI and save the plot
+# default(dpi=1000)
+# savefig("time_mp.png")
