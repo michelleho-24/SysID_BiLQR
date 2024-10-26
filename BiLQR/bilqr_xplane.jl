@@ -17,7 +17,7 @@ function sigma_update(pomdp, x::AbstractVector, Σ_diag::AbstractVector)
     Ct = ForwardDiff.jacobian(x -> obs_mean(pomdp, x), x)
     S = Ct * diagm(Σ_diag) * Ct' + obs_noise(pomdp, x)
     if any(isnan, S) || abs(det(S)) < 1e-12
-        println("S is nan, next seed...")
+        println("BiLQR S is nan, next seed...")
         return nothing
     end
     K = diagm(Σ_diag) * Ct' * inv(S)
@@ -57,10 +57,11 @@ function cost(Q, R, Q_N, s, u, s_goal)
     return (s - s_goal)' * Q * (s - s_goal) + u' * R * u + (s - s_goal)' * Q_N * (s - s_goal)
 end
 
-function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
+function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=50)
     if max_iters <= 1
         throw(ArgumentError("Argument `max_iters` must be at least 2."))
     end
+    
 
     f = update_belief
 

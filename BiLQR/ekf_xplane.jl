@@ -38,7 +38,7 @@ function ekf(pomdp, b, a, z)
     S = C * Σ_pred * C' + W_obs
 
     if any(isnan, S) || abs(det(S)) < 1e-12
-        println("S is nan, next seed...")
+        println("EKF S is nan, next seed...")
         return nothing
     end
 

@@ -1,68 +1,83 @@
-using Plots
+# using Plots
+using POMDPs
 using Random
+using LinearAlgebra
+using ForwardDiff
+using Distributions
+using Plots
 
 include("../BiLQR/ilqr_types.jl")
-include("../XPlane/Cessna_SysID_miac.jl")
-include("../BiLQR/bilqr.jl")
-include("../BiLQR/ekf.jl")
-include("../Baselines/MPC.jl")
+include("Cessna_SysID_miac.jl")
+include("../BiLQR/bilqr_xplane.jl")
+include("../BiLQR/ekf_xplane.jl")
+# include("../Baselines/MPC.jl")
 include("../Baselines/random_policy.jl")
 # include("../Baselines/Regression.jl")
 
-function xplane_sysid(seed, pomdp, Σ0, iters = 30)
+global b, s_true
+
+function system_identification(seed, method)
+    
     Random.seed!(seed)
-    # pomdp = XPlanePOMDP()
 
-    # # want A and B to have higher uncertainty than the rest of the state
-    # Σ0 = Diagonal(vcat(fill(0.01, 8), fill(0.1, 8^2 + 3*8)))
-        
-    # # Preallocate belief-state vector
-    # b0 = Vector{Float64}(undef, length(mdp.s_init) + length(vec(Σ0)))
-    # b0[1:length(mdp.s_init)] .= mdp.s_init
-    # b0[length(mdp.s_init) + 1:end] .= vec(Σ0)
-    # # Σ0 = Diagonal(vcat(fill(0.01, num_states(mdp)), fill(0.1, num_states(mdp)^2 + num_actions(mdp)*num_states(mdp))))
-    # # b0 = [mdp.s_init..., vec(Σ0)...]
-    # iters = 50
-    b = b0
+    # Initialize the Cartpole MDP
+    pomdp = XPlanePOMDP()
 
-    # mp_cov_per_timestep = zeros(iters)
-    # mp_var_per_timestep = zeros(iters)
-    # cost_per_timestep = zeros(iters)
-    all_b = Vector{Vector{Float16}}(undef, iters)
-    all_s = Vector{Vector{Float16}}(undef, iters)
-    A_estimates = Vector{Matrix{Float16}}(undef, iters)
-    A_variances = Vector{Matrix{Float16}}(undef, iters)
-    B_estimates = Vector{Matrix{Float16}}(undef, iters)
-    B_variances = Vector{Matrix{Float16}}(undef, iters)
-    AB_variances = Vector{Matrix{Float16}}(undef, iters)
-
+    # define initial distribution for total belief state 
     s_true = pomdp.s_init
+    
+    # 24 + 24 vector 
+    b = vcat(s_true[1:end - num_sysvars(pomdp)], pomdp.s_init[num_states(pomdp) - num_sysvars(pomdp) + 1:end], pomdp.Σ0)
+    # Simulation parameters
+    num_steps = 50
 
-    all_b[1] = b
-    all_s[1] = s_true
+    # Data storage for plotting
+    AB_vec_estimates = []
+    AB_variances = []
+    
+    push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp):num_states(pomdp)]) # 16 x 1
+    push!(AB_variances, Diagonal(b[end-(num_sysvars(pomdp) + 1):end])) # 16 x 16
 
-    for t in 1:iters
-        # println("Belief Update Iteration: ", t)
-        # global b, s_true
+    all_s = []
+    all_b = []
+    all_u = []
 
-        # compute optimal action
-        a, info_dict = bilqr(mdp, b)
+    for t in 1:num_steps
 
-        # vector of 3 actions between 0 and 10
-        # a = [rand() * 10.0 for i in 1:3]
+        # Store the true state for plotting
+        push!(all_s, s_true)
+        push!(all_b, b)
 
+        if method == "bilqr"
+            results = bilqr(pomdp, b)
+            if results === nothing
+                return nothing
+            else 
+                a, info_dict = results
+            end
+        elseif method == "mpc"
+            a = mpc(pomdp, b, 10)
+
+        #TODO: might want to change random range for this problem 
+        elseif method == "random"
+            a = xplane_random_policy(pomdp, b)
+        elseif method == "regression" || method == "mpcreg"
+            all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true = regression(pomdp, b, method)
+            return all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true
+        end 
+
+        push!(all_u, a)
+        
         # Simulate the true next state
-        s_true = dyn_mean(pomdp, s_true, a)
-        # println("s_next_true: ", s_next_true)
-
+        s_next_true = dyn_mean(pomdp, s_true, a)
+        
         # Add process noise to the true state
-        noise_state = rand(MvNormal(mdp.W_state_process))
-        noise_total = vcat(noise_state, vec(0.0 * Matrix{Float16}(I, 8, 8)), 
-        vec(0.0 * Matrix{Float16}(ones(8, 3))))
-        s_true += noise_total
+        noise_state = rand(MvNormal(pomdp.W_state_process))
+        noise_total = vcat(noise_state, zeros(num_sysvars(pomdp)))
+        s_next_true = s_next_true + noise_total
         
         # Generate observation from the true next state
-        z = obs_mean(pomdp, s_true)
+        z = obs_mean(pomdp, s_next_true)
         
         # Add observation noise
         obsnoise = rand(MvNormal(zeros(num_observations(pomdp)), pomdp.W_obs))
@@ -70,56 +85,22 @@ function xplane_sysid(seed, pomdp, Σ0, iters = 30)
         
         # Use your ekf function to update the belief
         b = ekf(pomdp, b, a, z)
+        if b === nothing
+            return nothing
+        end
         
-        A_vec = b[8+1:8 + 8^2]
-        B_vec = b[8 + 8^2 + 1:num_states(pomdp)]
-        # AB_vec = vcat(A_vec, B_vec)
-        cov_vec = b[num_states(pomdp)+1:end]
-
-        # Reshape the flattened covariance into a 165x165 matrix
-        cov_full = reshape(cov_vec, num_states(pomdp), num_states(pomdp))
-        cov_A = cov_full[8+1:8^2+8, 8+1:8^2+8]
-        cov_B = cov_full[8^2+8+1:8+8^2+3*8, 8^2+8+1:8+8^2+3*8]
-
-        A_t = reshape(A_vec, 8, 8)
-        B_t = reshape(B_vec, 8, 3)
-        # AB_t = hcat(A_t, B_t)
-
-        # Extract the 154x154 block corresponding to A (121 elements) and B (33 elements)
-        # A occupies indices 12 through 132 (1-based)
-        # B occupies indices 133 through 165
-        cov_A_B = cov_full[11+1:num_states(pomdp),11+1:num_states(pomdp)]
-
-        # Store estimates
-        A_estimates[t] = A_t
-        A_variances[t] = cov_A
-        B_estimates[t] = B_t
-        B_variances[t] = cov_B
-        AB_variances[t] = cov_A_B
-        all_b[t] = b
-        all_s[t] = s_true
-        # AB_estimates[t] = 
+        push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp):num_states(pomdp)]) # 16 x 1
+        push!(AB_variances, diagm(b[end-(num_sysvars(pomdp) + 1):end])) # 16 x 16
         
-    end 
+        # Update the true state for the next iteration
+        s_true = s_next_true
 
-    ΣΘΘ = AB_variances[end]
+        # Store the true state for plotting
+        push!(all_s, s_true)
+    end
+
+    ΣΘΘ = diagm(b[end-(num_sysvars(pomdp)-1):end])
     
-    return all_b, all_s, A_estimates, A_variances, B_estimates, B_variances, AB_variances, ΣΘΘ 
+    return all_b, AB_vec_estimates, AB_variances, ΣΘΘ, all_s, all_u, pomdp.AB_true
 
-    # println(tr(AB_variances[1]))
-
-    # # plot trace of AB_variances over time
-    # plot(1:iters, [tr(AB_variances[i]) for i in 1:iters], label="Trace of Covariance", xlabel="Time Step", ylabel="Trace of Covariance", title="Trace of Covariance over Time")
-    # savefig("trace_covariance.png")
-
-    # # Compute trace of covariance 
-    # A_estimated = reshape(b[num_states(mdp)+1:num_states(mdp)+num_states(mdp)^2], num_states(mdp), num_states(mdp))
-    # B_estimated = reshape(b[num_states(mdp)+num_states(mdp)^2+1:end], num_states(mdp), num_actions(mdp))
-
-    # Θ = hcat(A_estimated, B_estimated)
-    # tr_cov = tr(cov(Θ))
-    # rmse = sqrt(1/(11*(11+3)) * tr_cov)
-
-    # println("Trace of Covariance: ", tr_cov)
-    # println("RMSE: ", RMSE)
-end 
+end

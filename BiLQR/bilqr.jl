@@ -19,7 +19,7 @@ function sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix)
     Ct = ForwardDiff.jacobian(x -> obs_mean(pomdp,x), x)
     S = Ct * Σ * Ct' + obs_noise(pomdp, x)
     if any(isnan, S) || abs(det(S)) < 1e-12
-        println("S is nan, next seed...")
+        println("BiLQR S is nan, next seed...")
         return nothing
     end
 
