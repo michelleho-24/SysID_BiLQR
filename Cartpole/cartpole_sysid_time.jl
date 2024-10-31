@@ -6,7 +6,7 @@ include("../BiLQR/ilqr_types.jl")
     Q::Matrix{Float64} = 1e-10 * I(5)
     R::Matrix{Float64} = 1e-10 * I(1)
     Q_N::Matrix{Float64} = Diagonal([1e-10, 1e-10, 1e-10, 1e-10, 0.1])
-    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [1]))  
+    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [1]))  # 5^2
     # start and end positions
     # mp_true::Float64 = 2.0
     Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 1.0])
@@ -24,9 +24,10 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-2 * I(4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-2, 4), [0.0]))  
+    W_state_process::Matrix{Float64} = 1e-3 * I(4)
+    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
     W_obs::Matrix{Float64} = 1e-4 * I(4)
+    W_obs_ekf::Matrix{Float64} = 1e-2 * I(4)
 end
 
 function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
@@ -40,7 +41,9 @@ function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
         -((p.mc + mp) * p.g * sinθ + mp * p.l * (dθ^2) * sinθ * cosθ + a[1] * cosθ) / (h * p.l), 
         0.0
     ]
+    
     s_new = s + p.δt * ds
+
     return s_new
 end
 
@@ -55,10 +58,14 @@ function dyn_mean_time(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
         -((p.mc + mp) * p.g * sinθ + mp * p.l * (dθ^2) * sinθ * cosθ + a[1] * cosθ) / (h * p.l), 
         0.0
     ]
+    
     s_new = s + p.δt * ds
-    s_new[5] = mp + 1.0
+    s_new[5] = mp + 1.0 
+
     return s_new
 end
+
+
 
 dyn_noise(p::CartpoleMDP, s::AbstractVector, a::AbstractVector) = p.W_process
 obs_mean(p::CartpoleMDP, sp::AbstractVector) = sp[1:4]

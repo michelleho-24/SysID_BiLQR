@@ -27,6 +27,7 @@ include("../BiLQR/ilqr_types.jl")
     W_state_process::Matrix{Float64} = 1e-3 * I(4)
     W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
     W_obs::Matrix{Float64} = 1e-4 * I(4)
+    W_obs_ekf::Matrix{Float64} = 1e-2 * I(4)
 end
 
 function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
@@ -40,14 +41,8 @@ function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
         -((p.mc + mp) * p.g * sinθ + mp * p.l * (dθ^2) * sinθ * cosθ + a[1] * cosθ) / (h * p.l), 
         0.0
     ]
-
-    # ds[2] = (ds[2] + π) % (2 * π) - π
-
-    # need to bound s[1] between -4.8 and 4.8, s[2] between -pi and pi
+    
     s_new = s + p.δt * ds
-    # s_new[1] = clamp(s_new[1], -4.8, 4.8)
-    # s_new[2] = clamp(s_new[2], -pi, pi)
-    # s_new[2] = 
 
     return s_new
 end

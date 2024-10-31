@@ -26,7 +26,8 @@ include("../BiLQR/ilqr_types.jl")
     # noise covariance matrices
     W_state_process::Matrix{Float64} = 1e-3 * I(4) #1e-3
     W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
-    W_obs::Matrix{Float64} = 1e-1 * I(2)
+    W_obs::Matrix{Float64} = 1e-4 * I(2)
+    W_obs_ekf::Matrix{Float64} = 1e-1 * I(2)
 end
 
 function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)

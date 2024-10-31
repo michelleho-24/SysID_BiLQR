@@ -106,8 +106,6 @@ function system_identification(seed, method)
         # Update the true state for the next iteration
         s_true = s_next_true
 
-        # Store the true state for plotting
-        push!(all_s, s_true)
     end
 
     ΣΘΘ = b[end]

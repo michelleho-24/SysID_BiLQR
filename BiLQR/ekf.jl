@@ -24,7 +24,7 @@ function ekf(pomdp, b, a, z)
     C = ForwardDiff.jacobian(s -> obs_mean(pomdp, s), m_pred)
 
     # Noise matrices
-    W_obs = pomdp.W_obs
+    W_obs = pomdp.W_obs_ekf
     W_proc = pomdp.W_process
 
     # Predict covariance
