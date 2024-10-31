@@ -4,17 +4,6 @@ using LinearAlgebra
 using Plots
 using LaTeXStrings
 
-Σ_true = 2.0
-
-function rmse(P_pred, P_true = Σ_true)
-    @assert size(P_pred) == size(P_true) "Matrices must have the same size"
-    diag_pred = P_pred
-    diag_true = P_true
-    squared_diff = (diag_pred .- diag_true).^2
-    mse = mean(squared_diff)
-    return sqrt(mse)
-end
-
 function log_prob_gaussian(x, mean, variance)
     return -0.5 * log(2 * π * variance) - 0.5 * ((x - mean)^2 / variance)
 end
@@ -35,13 +24,7 @@ trace_regression_avg = mean(trace_values)
 trace_regression_std = std(trace_values)
 trace_regression_ste = trace_regression_std / sqrt(length(trace_values))
 
-# Calculate RMSE statistics
-rmse_values = [rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)]
-rmse_regression_avg = mean(rmse_values)
-rmse_regression_std = std(rmse_values)
-rmse_regression_ste = rmse_regression_std / sqrt(length(rmse_values))
-
-log_probs_regression = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
+# log_probs_regression = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 # plot(time_steps, log_probs_regression, label="Linear Regression", title = "System Identification")
 
 last_log_probs_regression = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates)  if haskey(all_mp_estimates, seed)]
@@ -50,15 +33,13 @@ last_log_probs_regression = [log_prob_gaussian(all_mp_true[seed], all_mp_estimat
 avg_last_log_prob_regression= mean(last_log_probs_regression)
 std_last_log_prob_regression = std(last_log_probs_regression)
 
+# plot(time_steps, [(all_mp_estimates[plotting_seed][i]) for i in 1:t], ribbon=[(all_mp_variances[plotting_seed][i]) for i in 1:t], label="Regression", xlabel="Time Step", ylabel="Mass Estimate")
+
 @load "random_cartpolefull_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true 
 
 trace_random_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_random_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_random_ste = trace_random_std/sqrt(length(all_ΣΘΘ))
-
-rmse_random_avg = mean([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-rmse_random_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-rmse_random_ste = rmse_random_std/sqrt(length(all_ΣΘΘ))
 
 log_probs_random = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 # plot!(time_steps, log_probs_random, label="EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
@@ -69,15 +50,13 @@ last_log_probs_random = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[s
 avg_last_log_prob_random = mean(last_log_probs_random)
 std_last_log_prob_random = std(last_log_probs_random)
 
+plot!(time_steps, [(all_mp_estimates[plotting_seed][i]) for i in 1:t], ribbon=[(all_mp_variances[plotting_seed][i]) for i in 1:t], label="EKF", xlabel="Time Step", ylabel="Mass Estimate")
+
 @load "bilqr_cartpolefull_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true 
 
 trace_bilqr_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_bilqr_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_bilqr_ste = trace_bilqr_std/sqrt(length(all_ΣΘΘ))
-
-rmse_bilqr_avg = mean([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-rmse_bilqr_std = std([rmse(ΣΘΘ) for ΣΘΘ in values(all_ΣΘΘ)])
-rmse_bilqr_ste = rmse_bilqr_std/sqrt(length(all_ΣΘΘ))
 
 log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimates[plotting_seed ][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 # plot!(time_steps, log_probs_bilqr, label="BiLQR")
@@ -85,15 +64,18 @@ log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed ], all_mp_estimat
 last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates)  if haskey(all_mp_estimates, seed)]
 
 # Calculate the average and standard deviation
-# avg_last_log_prob_bilqr = mean(last_log_probs_bilqr)
-# std_last_log_prob_bilqr = std(last_log_probs_bilqr)
+avg_last_log_prob_bilqr = mean(last_log_probs_bilqr)
+std_last_log_prob_bilqr = std(last_log_probs_bilqr)
 
-# Remove the 17th element from last_log_probs_bilqr
-filtered_last_log_probs_bilqr = [last_log_probs_bilqr[i] for i in 1:length(last_log_probs_bilqr) if i != 17]
+plot!(time_steps, [(all_mp_estimates[plotting_seed][i]) for i in 1:t], ribbon=[(all_mp_variances[plotting_seed][i]) for i in 1:t], label="BiLQR", xlabel="Time Step", ylabel="Mass Estimate")
 
-# Calculate the average and standard deviation without the 17th element
-avg_last_log_prob_bilqr = mean(filtered_last_log_probs_bilqr)
-std_last_log_prob_bilqr = std(filtered_last_log_probs_bilqr)
+
+# # Remove the 17th element from last_log_probs_bilqr
+# filtered_last_log_probs_bilqr = [last_log_probs_bilqr[i] for i in 1:length(last_log_probs_bilqr) if i != 17]
+
+# # Calculate the average and standard deviation without the 17th element
+# avg_last_log_prob_bilqr = mean(filtered_last_log_probs_bilqr)
+# std_last_log_prob_bilqr = std(filtered_last_log_probs_bilqr)
 
 # # Find seeds with high log probabilities
 # sorted_indices = sortperm(filtered_last_log_probs_bilqr, rev=true)  # Sort in descending order
@@ -107,18 +89,13 @@ println("BILQR: ", trace_bilqr_avg, " ± ", trace_bilqr_ste)
 println("Random: ", trace_random_avg, " ± ", trace_random_ste)
 println("Regression: ", trace_regression_avg, " ± ", trace_regression_ste)
 
-println("RMSE of ΣΘΘ")
-println("BiLQR: ", rmse_bilqr_avg, " ± ", rmse_bilqr_ste)
-println("Random: ", rmse_random_avg, " ± ", rmse_random_ste)
-println("Regression: ", rmse_regression_avg, " ± ", rmse_regression_ste)
-
 println("Final Log Probability")
 println("BILQR: ", avg_last_log_prob_bilqr, " ± ", std_last_log_prob_bilqr)
 println("Random: ", avg_last_log_prob_random, " ± ", std_last_log_prob_random)
 println("Regression: ", avg_last_log_prob_regression, " ± ", std_last_log_prob_regression)
 
-# hline!([all_mp_true[plotting_seed ]], label="True mass", linestyle=:dash)
+hline!([all_mp_true[plotting_seed ]], label="True mass", linestyle=:dash)
 
-# # Set default DPI and save the plot
-# default(dpi=1000)
-# savefig("time_mp.png")
+# Set default DPI and save the plot
+default(dpi=1000)
+savefig("est_full_mp.png")

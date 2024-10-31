@@ -6,14 +6,14 @@ include("../XPlane/xplane_miac_tests_partial.jl")
 all_b_ends = Dict{Int, Vector{Vector{Float64}}}()
 all_AB_estimates = Dict{Int, Vector{Vector{Float64}}}()
 all_AB_variances = Dict{Int, Vector{Matrix{Float64}}}()
-all_ΣΘΘ = Dict{Int, Matrix{Float64}}()
+all_ΣΘΘ = Dict{Int, {Matrix{Float64}}}()
 all_s = Dict{Int, Vector{Vector{Float64}}}()
 all_u = Dict{Int, Vector{Vector{Float64}}}()
 all_ABtrue = Dict{Int, Vector{Float64}}()
 # all_Atrue = Dict{Int, Matrix{Float64}}()
 # all_Btrue = Dict{Int, Matrix{Float64}}()
 
-method = "bilqr"
+method = "regression"
 
 jld2_file = "test_$(method)_xplanepartial_miac_results.jld2"
 if isfile(jld2_file)
@@ -21,7 +21,7 @@ if isfile(jld2_file)
 end
 
 # Run the system identification experiment
-for seed in 30:60 # skip 9, 29, 32, 36. 42, 45, 48
+for seed in 1:60 # skip 9, 29, 32, 36. 42, 45, 48
     println("Seed: ", seed)
     
     results = system_identification(seed, method)

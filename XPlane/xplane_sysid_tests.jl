@@ -12,7 +12,7 @@ include("../BiLQR/bilqr_xplane.jl")
 include("../BiLQR/ekf_xplane.jl")
 # include("../Baselines/MPC.jl")
 include("../Baselines/random_policy.jl")
-# include("../Baselines/Regression.jl")
+include("../Baselines/regression_xplane.jl")
 
 global b, s_true
 
@@ -26,8 +26,10 @@ function system_identification(seed, method)
     # define initial distribution for total belief state 
     s_true = pomdp.s_init
     
-    # 24 + 24 vector 
+    # 12 + 12 vector 
     b = vcat(s_true[1:end - num_sysvars(pomdp)], pomdp.s_init[num_states(pomdp) - num_sysvars(pomdp) + 1:end], pomdp.Σ0)
+    # println(size(b))
+    # println(size(pomdp.Σ0))
     # Simulation parameters
     num_steps = 50
 
@@ -35,8 +37,8 @@ function system_identification(seed, method)
     AB_vec_estimates = []
     AB_variances = []
     
-    push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp):num_states(pomdp)]) # 16 x 1
-    push!(AB_variances, Diagonal(b[end-(num_sysvars(pomdp) + 1):end])) # 16 x 16
+    push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]) # 8 x 1
+    push!(AB_variances, diagm(b[end-num_sysvars(pomdp) + 1:end])) # 8x8
 
     all_s = []
     all_b = []
@@ -58,12 +60,11 @@ function system_identification(seed, method)
         elseif method == "mpc"
             a = mpc(pomdp, b, 10)
 
-        #TODO: might want to change random range for this problem 
         elseif method == "random"
             a = xplane_random_policy(pomdp, b)
         elseif method == "regression" || method == "mpcreg"
-            all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true = regression(pomdp, b, method)
-            return all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true
+            results = regression(pomdp, b, method)
+            return results 
         end 
 
         push!(all_u, a)
@@ -85,21 +86,29 @@ function system_identification(seed, method)
         
         # Use your ekf function to update the belief
         b = ekf(pomdp, b, a, z)
+
         if b === nothing
             return nothing
         end
         
-        push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp):num_states(pomdp)]) # 16 x 1
-        push!(AB_variances, diagm(b[end-(num_sysvars(pomdp) + 1):end])) # 16 x 16
+        push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]) # 8 x 1
+        push!(AB_variances, diagm(b[end-num_sysvars(pomdp) + 1:end])) 
+
+        # println(size(b[5:12]))
+        # println(size(diagm(b[13:end])))
         
         # Update the true state for the next iteration
         s_true = s_next_true
-
-        # Store the true state for plotting
-        push!(all_s, s_true)
     end
 
-    ΣΘΘ = diagm(b[end-(num_sysvars(pomdp)-1):end])
+    ΣΘΘ = diagm(b[end-num_sysvars(pomdp) + 1:end])
+    # println(typeof(all_b))
+    # println(typeof(AB_vec_estimates))
+    # println(typeof(AB_variances))
+    # println(typeof(ΣΘΘ))
+    # println(typeof(all_s))
+    # println(typeof(all_u))
+    # println(typeof(pomdp.AB_true))
     
     return all_b, AB_vec_estimates, AB_variances, ΣΘΘ, all_s, all_u, pomdp.AB_true
 

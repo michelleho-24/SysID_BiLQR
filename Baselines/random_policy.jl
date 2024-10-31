@@ -17,7 +17,7 @@ function xplane_random_policy(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
     # a = rand(rng, -10:10)
     # a = 100 * rand() - 50
     # a = 20 * rand() - 10
-    a = 100 * rand(3) .- 50
+    a = 10 * rand(2) .- 5
     return a
 
 end

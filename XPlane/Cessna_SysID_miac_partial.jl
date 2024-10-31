@@ -6,18 +6,18 @@ include("../BiLQR/ilqr_types.jl")
 
 @with_kw mutable struct XPlanePOMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
     
-    Q::Matrix{Float16} = diagm(vcat(fill(0.01, 1), fill(0.1, 3), fill(1e-5, 8)))
-    R::Matrix{Float16} = diagm(0 => fill(0.05, 2))
-    Q_N::Matrix{Float16} = diagm(vcat(fill(0.01, 1), fill(0.1, 3), fill(0.1, 8)))
-    Λ::Matrix{Float16} = Diagonal(vcat(fill(0.05, 4), fill(1, 8))) 
+    Q::Matrix{Float16} = diagm(vcat([10, 50, 100, 10], fill(1e-5, 8)))
+    R::Matrix{Float16} = diagm([1, 10])
+    Q_N::Matrix{Float16} = diagm(vcat([10, 50, 100, 10], fill(0.1, 8)))
+    Λ::Matrix{Float16} = Diagonal(vcat(fill(0.1, 4), fill(10, 8))) 
 
     # Σ0::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 8), fill(2, 16)))
-    Σ0::Vector{Float64} = vcat(fill(1e-5, 4), fill(2, 8))
+    Σ0::Vector{Float64} = vcat(fill(1e-5, 4), fill(1, 8))
     b0::MvNormal = MvNormal(
         vcat([1.0, 0.5, 0.1, 0.05], 
              [-0.05, 0, 0, 0], # A unknowns 
              [0, 1, 0, 0]), # B unknowns
-        Σ0)
+        diagm(Σ0))
     s_init::Vector{Float64} = rand(b0)
     # A_true::Matrix{Float64} = Diagonal(s_init[8:15])
     # B_true::Matrix{Float64} = hcat(s_init[16:end], ones(8, 2))
@@ -34,10 +34,11 @@ include("../BiLQR/ilqr_types.jl")
 
     # noise
     W_state_process::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 4, 4)
-    W_process::Matrix{Float16} = Diagonal(vcat(fill(1e-3, 4), 
+    W_process::Matrix{Float16} = diagm(vcat(fill(1e-3, 4), 
                                             fill(0, 4), 
                                             fill(0, 4)) )
-    W_obs::Matrix{Float16} = 1e-2 * Matrix{Float16}(I, 3, 3)
+    W_obs::Matrix{Float16} = 1e-4 * Matrix{Float16}(I, 3, 3)
+    W_obs_ekf::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 3, 3)
 end
 
 function dyn_mean(p::XPlanePOMDP, s::AbstractVector, a::AbstractVector)

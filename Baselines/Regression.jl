@@ -9,7 +9,7 @@ include("MPC.jl")
 
 function regression(pomdp, b, method)
 
-    iters = 200
+    iters = 20
     state = copy(pomdp.s_init)
 
     # True mass of the pole (unknown to the estimator)
@@ -22,6 +22,9 @@ function regression(pomdp, b, method)
     # List to store estimated mass values over time
     mp_estimated_list = []
     variance_mp_list = []
+    push!(mp_estimated_list, b[num_states(pomdp)])
+    push!(variance_mp_list, b[end - 1])
+
     all_s = []
     all_b = []
     all_u = []

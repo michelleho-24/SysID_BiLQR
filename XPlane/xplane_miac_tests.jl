@@ -10,9 +10,9 @@ include("../BiLQR/ilqr_types.jl")
 include("Cessna_SysID_miac.jl")
 include("../BiLQR/bilqr_xplane.jl")
 include("../BiLQR/ekf_xplane.jl")
-# include("../Baselines/MPC.jl")
+include("../Baselines/MPC.jl")
 include("../Baselines/random_policy.jl")
-# include("../Baselines/Regression.jl")
+include("../Baselines/regression_xplane.jl")
 
 global b, s_true
 
@@ -35,8 +35,8 @@ function system_identification(seed, method)
     AB_vec_estimates = []
     AB_variances = []
     
-    push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp):num_states(pomdp)]) # 16 x 1
-    push!(AB_variances, Diagonal(b[end-(num_sysvars(pomdp) + 1):end])) # 16 x 16
+    push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]) # 8 x 1
+    push!(AB_variances, diagm(b[end-num_sysvars(pomdp) + 1:end])) # 8x8
 
     all_s = []
     all_b = []
@@ -62,8 +62,8 @@ function system_identification(seed, method)
         elseif method == "random"
             a = xplane_random_policy(pomdp, b)
         elseif method == "regression" || method == "mpcreg"
-            all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true = regression(pomdp, b, method)
-            return all_b, mp_estimated_list, variance_mp_list, ΣΘΘ, all_s, all_u, pomdp.mp_true
+            all_b, AB_vec_estimates, AB_variances, ΣΘΘ, all_s, all_u, pomdp.AB_true = regression(pomdp, b, method)
+            return all_b, AB_vec_estimates, AB_variances, ΣΘΘ, all_s, all_u, pomdp.AB_true
         end 
 
         push!(all_u, a)
@@ -89,17 +89,15 @@ function system_identification(seed, method)
             return nothing
         end
         
-        push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp):num_states(pomdp)]) # 16 x 1
-        push!(AB_variances, diagm(b[end-(num_sysvars(pomdp) + 1):end])) # 16 x 16
-        
+        push!(AB_vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]) # 8 x 1
+        push!(AB_variances, diagm(b[end-num_sysvars(pomdp) + 1:end])) # 8x8
+
         # Update the true state for the next iteration
         s_true = s_next_true
 
-        # Store the true state for plotting
-        push!(all_s, s_true)
     end
 
-    ΣΘΘ = diagm(b[end-(num_sysvars(pomdp)-1):end])
+    ΣΘΘ = diagm(b[end-num_sysvars(pomdp) + 1:end])
     
     return all_b, AB_vec_estimates, AB_variances, ΣΘΘ, all_s, all_u, pomdp.AB_true
 

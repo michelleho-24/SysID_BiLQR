@@ -13,15 +13,15 @@ all_ABtrue = Dict{Int, Vector{Float64}}()
 # all_Atrue = Dict{Int, Matrix{Float64}}()
 # all_Btrue = Dict{Int, Matrix{Float64}}()
 
-method = "bilqr"
+method = "random"
 
-jld2_file = "test_$(method)_xplanepartial_sysid_results.jld2"
+jld2_file = "$(method)_xplanepartial_sysid_results.jld2"
 if isfile(jld2_file)
     @load jld2_file all_b_ends all_AB_estimates all_AB_variances all_ΣΘΘ all_s all_u all_ABtrue 
 end
 
 # Run the system identification experiment
-for seed in 26:60 # skip 24, 25, 28, 29, 32, 33, 41, 42, 45, 48, 54, 56, 57, 
+for seed in 1:60 # skip 24, 25, 28, 29, 32, 33, 41, 42, 45, 48, 54, 56, 57, 
     println("Seed: ", seed)
     
     results = system_identification(seed, method)

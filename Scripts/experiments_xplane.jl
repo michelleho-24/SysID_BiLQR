@@ -1,5 +1,5 @@
 using JLD2
-include("../XPlane/xplane_sysid_tests.jl")
+include("../XPlane/xplane_miac_tests.jl")
 # include("../Cartpole/cartpole_sysid_tests_partial.jl")
 
 # Initialize dictionaries to store outputs for each seed
@@ -10,12 +10,12 @@ all_ΣΘΘ = Dict{Int, Matrix{Float64}}()
 all_s = Dict{Int, Vector{Vector{Float64}}}()
 all_u = Dict{Int, Vector{Vector{Float64}}}()
 all_ABtrue = Dict{Int, Vector{Float64}}()
-# all_Atrue = Dict{Int, Matrix{Float64}}()
-# all_Btrue = Dict{Int, Matrix{Float64}}()
+all_Atrue = Dict{Int, Matrix{Float64}}()
+all_Btrue = Dict{Int, Matrix{Float64}}()
 
-method = "bilqr"
+method = "mpcreg"
 
-jld2_file = "test_$(method)_xplanefull_sysid_results.jld2"
+jld2_file = "$(method)_xplanefull_miac_results.jld2"
 if isfile(jld2_file)
     @load jld2_file all_b_ends all_AB_estimates all_AB_variances all_ΣΘΘ all_s all_u all_ABtrue 
 end
@@ -39,6 +39,7 @@ for seed in 1:60
     all_s[seed] = s_seed
     all_u[seed] = u_seed
     all_ABtrue[seed] = AB_true_seed
+
 
     # Save all dictionaries to a JLD2 file
     @save jld2_file all_b_ends all_AB_estimates all_AB_variances all_ΣΘΘ all_s all_u all_ABtrue 

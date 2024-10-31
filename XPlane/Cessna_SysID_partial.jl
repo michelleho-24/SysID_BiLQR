@@ -12,12 +12,12 @@ include("../BiLQR/ilqr_types.jl")
     Λ::Matrix{Float16} = diagm(vcat(fill(1e-5, 4), fill(1, 8)))  # diagonalized \Sigma only has 24 variables, 24 x 24 matrix
 
     # Σ0::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 8), fill(2, 16)))
-    Σ0::Vector{Float64} = vcat(fill(1e-5, 4), fill(2, 8))
+    Σ0::Vector{Float64} = vcat(fill(1e-5, 4), fill(1, 8))
     b0::MvNormal = MvNormal(
         vcat([1.0, 0.5, 0.1, 0.05], 
              [-0.05, 0, 0, 0], # A unknowns 
              [0, 1, 0, 0]), # B unknowns
-        Σ0)
+        diagm(Σ0))
     s_init::Vector{Float64} = rand(b0)
     # A_true::Matrix{Float64} = Diagonal(s_init[8:15])
     # B_true::Matrix{Float64} = hcat(s_init[16:end], ones(8, 2))
@@ -37,7 +37,8 @@ include("../BiLQR/ilqr_types.jl")
     W_process::Matrix{Float16} = Diagonal(vcat(fill(1e-3, 4), 
                                             fill(0, 4), 
                                             fill(0, 4)) )
-    W_obs::Matrix{Float16} = 1e-2 * Matrix{Float16}(I, 3, 3)
+    W_obs::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 3, 3)
+    W_obs_ekf::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 3, 3)
 end
 
 function dyn_mean(p::XPlanePOMDP, s::AbstractVector, a::AbstractVector)
