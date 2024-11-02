@@ -3,10 +3,10 @@ include("../BiLQR/ilqr_types.jl")
 
 @with_kw mutable struct CartpoleMDP <: iLQGPOMDP{AbstractVector, AbstractVector, AbstractVector}
     # reward
-    Q::Matrix{Float64} = 1e-10 * I(5)
-    R::Matrix{Float64} = 1e-10 * I(1)
-    Q_N::Matrix{Float64} = Diagonal([1e-10, 1e-10, 1e-10, 1e-10, 0.1])
-    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 24), [1]))  # 5^2
+    Q::Matrix{Float64} = 1e-4 * I(5)
+    R::Matrix{Float64} = 1e-4 * I(1)
+    Q_N::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 0.1])
+    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-4, 24), [1]))  # 5^2
     # start and end positions
     # mp_true::Float64 = 2.0
     Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 1.0])
@@ -24,10 +24,10 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-3 * I(4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-3, 4), [0.0]))  
-    W_obs::Matrix{Float64} = 1e-4 * I(4)
-    W_obs_ekf::Matrix{Float64} = 1e-2 * I(4)
+    W_state_process::Matrix{Float64} = Diagonal([0.3, 0.1, 0.3, 0.1])
+    W_process::Matrix{Float64} = Diagonal([0.3, 0.1, 0.05, 0.1, 0.0])
+    W_obs::Matrix{Float64} = 0.01 * I(4)
+    W_obs_ekf::Matrix{Float64} = 0.01 * I(4)
 end
 
 function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)

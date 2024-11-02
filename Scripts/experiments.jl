@@ -11,7 +11,7 @@ all_s = Dict{Int, Vector{Vector{Float64}}}()
 all_u = Dict{Int, Vector{Vector{Float64}}}()
 all_mp_true = Dict{Int, Float64}()
 
-method = "regression"
+method = "bilqr"
 
 jld2_file = "$(method)_cartpolefull_sysid_results.jld2"
 if isfile(jld2_file)
@@ -19,7 +19,7 @@ if isfile(jld2_file)
 end
 
 # Run the system identification experiment
-for seed in 1:60
+for seed in 10:300
     println("Seed: ", seed)
     
     results = system_identification(seed, method)

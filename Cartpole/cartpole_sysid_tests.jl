@@ -30,7 +30,6 @@ function system_identification(seed, method)
     b = vcat(s_true[1:end - num_sysvars(pomdp)], pomdp.mp_true, pomdp.Σ0[:])
     # Simulation parameters
     num_steps = 50
-
     # Data storage for plotting
     mp_estimates = []
     mp_variances = []
@@ -42,6 +41,7 @@ function system_identification(seed, method)
     all_u = []
 
     for t in 1:num_steps
+        # println("Step: ", t)
 
         # Store the true state for plotting
         push!(all_s, s_true)

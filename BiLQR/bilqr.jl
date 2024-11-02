@@ -17,6 +17,7 @@ end
 
 function sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix)
     Ct = ForwardDiff.jacobian(x -> obs_mean(pomdp,x), x)
+    # println(diag(Σ))
     S = Ct * Σ * Ct' + obs_noise(pomdp, x)
     if any(isnan, S) || abs(det(S)) < 1e-12
         println("BiLQR S is nan, next seed...")
@@ -70,7 +71,7 @@ function cost(Q, R, Q_N, s, u, s_goal)
 end
 
 # iLQR function
-function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
+function bilqr(pomdp, b0; N = 10, eps=1e-2, max_iters=100)
 # function bilqr(pomdp, b0; N = 3, eps=1e-3, max_iters=5)
 # function bilqr(pomdp, b0; N = 1, eps=1e-3, max_iters=2)
 
@@ -127,6 +128,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
     for iter in 1:max_iters
         # println("BiLQR Iteration: ", iter)
+        # println("BiLQR Iteration: ", iter)
 
         A, B = superAB(pomdp, q, r, N, s_bar, u_bar)
 
@@ -140,6 +142,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
 
         # Backward pass
         for k in N:-1:1
+            # println("Backward k: ", k)
             Qxk = Q * (s_bar[k, :] - s_goal) + A[k, :, :]' * v
             Quk = R * u_bar[k, :] + B[k, :, :]' * v
             Qxx = Q + A[k, :, :]' * V * A[k, :, :]
@@ -156,6 +159,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=1000)
         # Forward pass
         s_bar_prev = copy(s_bar)
         for k in 1:N
+            # println("Forward k: ", k)
             du[k, :] = Y[k, :, :] * ds[k, :] + y[k, :]
             next_belief = f(pomdp, s_bar[k, :], u_bar[k, :] + du[k, :])
             if next_belief === nothing
