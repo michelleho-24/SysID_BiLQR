@@ -5,14 +5,13 @@ using Distributions
 include("../BiLQR/ilqr_types.jl")
 
 @with_kw mutable struct XPlanePOMDP <: iLQGPOMDP{AbstractVector,AbstractVector,AbstractVector}
-    
     Q::Matrix{Float16} = diagm(vcat([10, 50, 100, 10], fill(1e-5, 8)))
     R::Matrix{Float16} = diagm([1, 10])
     Q_N::Matrix{Float16} = diagm(vcat([10, 50, 100, 10], fill(0.1, 8)))
     Λ::Matrix{Float16} = Diagonal(vcat(fill(0.1, 4), fill(10, 8))) 
-
+    
     # Σ0::Matrix{Float64} = Diagonal(vcat(fill(1e-10, 8), fill(2, 16)))
-    Σ0::Vector{Float64} = vcat(fill(1e-5, 4), fill(1, 8))
+    Σ0::Vector{Float64} = vcat(fill(1e-5, 4), fill(10.0, 8))
     b0::MvNormal = MvNormal(
         vcat([1.0, 0.5, 0.1, 0.05], 
              [-0.05, 0, 0, 0], # A unknowns 
@@ -33,12 +32,14 @@ include("../BiLQR/ilqr_types.jl")
     δt::Float16 = 0.1
 
     # noise
-    W_state_process::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 4, 4)
-    W_process::Matrix{Float16} = diagm(vcat(fill(1e-3, 4), 
-                                            fill(0, 4), 
-                                            fill(0, 4)) )
-    W_obs::Matrix{Float16} = 1e-4 * Matrix{Float16}(I, 4, 4)
-    W_obs_ekf::Matrix{Float16} = 1e-3 * Matrix{Float16}(I, 4, 4)
+    W_state_process::Matrix{Float16} = diagm([50, 50, 0.1, 0.1])
+    W_process::Matrix{Float16} = diagm(vcat([50, 50, 0.1, 0.1, 
+                                            0,  0, 0,  0, 
+                                            0,  0, 0,  0])) 
+    # W_obs::Matrix{Float16} = 1e-2 * Matrix{Float16}(I, 4, 4)
+    # W_obs_ekf::Matrix{Float16} = 1e-2 * Matrix{Float16}(I, 4, 4)
+    W_obs::Matrix{Float16} = diagm([1, 1, 1, 1])
+    W_obs_ekf::Matrix{Float16} = diagm([1, 1, 1, 1])
 end
 
 function dyn_mean(p::XPlanePOMDP, s::AbstractVector, a::AbstractVector)

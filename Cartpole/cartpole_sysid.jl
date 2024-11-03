@@ -9,7 +9,7 @@ include("../BiLQR/ilqr_types.jl")
     Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-4, 24), [1]))  # 5^2
     # start and end positions
     # mp_true::Float64 = 2.0
-    Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 1.0])
+    Σ0::Matrix{Float64} = diagm([1e-4, 1e-4, 1e-4, 1e-4, 2.0])
     b0::MvNormal = MvNormal([0.0, π/2, 0.0, 0.0, 2.0], Σ0)
     s_init::Vector{Float64} = begin
         s = rand(b0)
@@ -24,8 +24,8 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = Diagonal([0.3, 0.1, 0.3, 0.1])
-    W_process::Matrix{Float64} = Diagonal([0.3, 0.1, 0.05, 0.1, 0.0])
+    W_state_process::Matrix{Float64} = diagm([0.5, 0.1, 0.5, 0.1])
+    W_process::Matrix{Float64} = diagm([0.5, 0.1, 0.5, 0.1, 0.0])
     W_obs::Matrix{Float64} = 0.01 * I(4)
     W_obs_ekf::Matrix{Float64} = 0.01 * I(4)
 end

@@ -31,7 +31,7 @@ function system_identification(seed, method)
     # println(size(b))
     # println(size(pomdp.Σ0))
     # Simulation parameters
-    num_steps = 50
+    num_steps = 15
 
     # Data storage for plotting
     AB_vec_estimates = []

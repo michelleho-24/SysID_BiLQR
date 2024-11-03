@@ -9,7 +9,7 @@ include("MPC.jl")
 
 function regression(pomdp, b, method)
 
-    iters = 20
+    iters = 30
     state = copy(pomdp.s_init)
 
     # True mass of the pole (unknown to the estimator)

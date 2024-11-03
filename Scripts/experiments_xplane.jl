@@ -13,7 +13,7 @@ all_ABtrue = Dict{Int, Vector{Float64}}()
 all_Atrue = Dict{Int, Matrix{Float64}}()
 all_Btrue = Dict{Int, Matrix{Float64}}()
 
-method = "mpcreg"
+method = "mpc"
 
 jld2_file = "$(method)_xplanefull_miac_results.jld2"
 if isfile(jld2_file)
@@ -21,7 +21,7 @@ if isfile(jld2_file)
 end
 
 # Run the system identification experiment
-for seed in 1:60
+for seed in 1:150
     println("Seed: ", seed)
     
     results = system_identification(seed, method)

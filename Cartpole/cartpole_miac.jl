@@ -5,10 +5,11 @@ include("../BiLQR/ilqr_types.jl")
     # reward
     Q = Diagonal([1e-10, 0.1, 1e-10, 0.1, 0.1])
     R::Matrix{Float64} = 0.05 * Matrix{Float64}(I, 1, 1)
-    Q_N::Matrix{Float64} = Diagonal([1e-10, 0.1, 1e-10, 0.1, 0.1])
-    Λ::Matrix{Float64} = Diagonal(vcat(fill(5e-2, 24), [0.1])) 
+    Q_N::Matrix{Float64} = Diagonal([1e-4, 0.1, 1e-4, 0.1, 0.1])
+    Λ::Matrix{Float64} = Diagonal(vcat(fill(1e-4, 24), [1]))  # 5^2
     # start and end positions
-    Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 1.0])
+    # mp_true::Float64 = 2.0
+    Σ0::Matrix{Float64} = Diagonal([1e-4, 1e-4, 1e-4, 1e-4, 2.0])
     b0::MvNormal = MvNormal([0.0, π/2, 0.0, 0.0, 2.0], Σ0)
     s_init::Vector{Float64} = begin
         s = rand(b0)
@@ -23,10 +24,10 @@ include("../BiLQR/ilqr_types.jl")
     g::Float64 = 9.81
     l::Float64 = 1.0
     # noise covariance matrices
-    W_state_process::Matrix{Float64} = 1e-2 * I(4)
-    W_process::Matrix{Float64} = Diagonal(vcat(fill(1e-2, 4), [0.0]))  
-    W_obs::Matrix{Float64} = 1e-4 * I(4)
-    W_obs_ekf::Matrix{Float64} = 1e-1 * I(4)
+    W_state_process::Matrix{Float64} = Diagonal([0.5, 0.1, 0.5, 0.1])
+    W_process::Matrix{Float64} = Diagonal([0.5, 0.1, 0.5, 0.1, 0.0])
+    W_obs::Matrix{Float64} = 0.01 * I(4)
+    W_obs_ekf::Matrix{Float64} = 0.01 * I(4)
 end
 
 function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
@@ -40,14 +41,8 @@ function dyn_mean(p::CartpoleMDP, s::AbstractVector, a::AbstractVector)
         -((p.mc + mp) * p.g * sinθ + mp * p.l * (dθ^2) * sinθ * cosθ + a[1] * cosθ) / (h * p.l), 
         0.0
     ]
-
-    # ds[2] = (ds[2] + π) % (2 * π) - π
-
-    # need to bound s[1] between -4.8 and 4.8, s[2] between -pi and pi
+    
     s_new = s + p.δt * ds
-    # s_new[1] = clamp(s_new[1], -4.8, 4.8)
-    # s_new[2] = clamp(s_new[2], -pi, pi)
-    # s_new[2] = 
 
     return s_new
 end
@@ -69,4 +64,3 @@ function isvalidstate(p::CartpoleMDP, s::AbstractVector)
     x, θ, dx, dθ, mp = s
     return -4.8 <= x <= 4.8 && -pi <= θ <= pi
 end
-

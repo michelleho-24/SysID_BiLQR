@@ -10,8 +10,8 @@ include("../BiLQR/ilqr_types.jl")
 include("cartpole_sysid.jl")
 include("../BiLQR/bilqr.jl")
 include("../BiLQR/ekf.jl")
-include("../Baselines/MPC.jl")
-include("../Baselines/random_policy.jl")
+# include("../Baselines/MPC.jl")
+# include("../Baselines/random_policy.jl")
 include("../Baselines/Regression.jl")
 
 global b, s_true
