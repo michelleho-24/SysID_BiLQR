@@ -20,16 +20,20 @@ end
 
 method = "bilqr"
 
-@load "$(method)_cartpolefull_miac_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true 
+@load "$(method)_cartpolepartial_sysid_results.jld2" all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true 
 
 last_log_probs = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed)]
 
-filtered_log_probs = [last_log_probs[i] for i in 1:length(last_log_probs) if i != 107]
-# println(sort(filtered_log_probs))
+filtered_log_probs = [last_log_probs[i] for i in 1:length(last_log_probs) if i != 50]
+# println(sortperm(last_log_probs))
 
 trace_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_ste = trace_std/sqrt(length(all_ΣΘΘ))
+
+# avg_last_log_prob = mean(last_log_probs)
+# std_last_log_prob = std(last_log_probs)
+# ste_last_log_prob = std_last_log_prob/sqrt(length(last_log_probs))
 
 avg_last_log_prob = mean(filtered_log_probs)
 std_last_log_prob = std(filtered_log_probs)

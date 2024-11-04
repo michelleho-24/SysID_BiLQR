@@ -30,17 +30,17 @@ function calculate_expected_reward(all_s, all_u)
         push!(rewards, reward)
     end
     # Create the histogram
-    p = histogram(rewards, bins=6, title="Reward Distribution", xlabel="Reward Value", ylabel="Frequency")
+    p = histogram(rewards, bins=8, title="Reward Distribution", xlabel="Reward Value", ylabel="Frequency")
 
     # Save the plot as a PNG file
-    savefig(p, "bilqr_reward_histogram.png")
+    savefig(p, "mpc_reward_histogram.png")
 
     mean_reward = mean(rewards)
     std_reward = std(rewards)
     return mean_reward, std_reward
 end
 
-method = "bilqr"
+method = "mpc"
 
 @load "$(method)_xplanefull_miac_results.jld2" all_b_ends all_AB_estimates all_AB_variances all_ΣΘΘ all_s all_u all_ABtrue 
 
