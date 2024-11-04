@@ -71,7 +71,7 @@ function cost(Q, R, Q_N, s, u, s_goal)
 end
 
 # iLQR function
-function bilqr(pomdp, b0; N = 10, eps=1e-2, max_iters=100)
+function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
 # function bilqr(pomdp, b0; N = 3, eps=1e-3, max_iters=5)
 # function bilqr(pomdp, b0; N = 1, eps=1e-3, max_iters=2)
 

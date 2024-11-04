@@ -44,7 +44,7 @@ trace_random_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_random_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_random_ste = trace_random_std / sqrt(length(all_ΣΘΘ))
 
-log_probs_random = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
+# log_probs_random = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 # plot(time_steps, log_probs_random, label="EKF", xlabel="Time Step", ylabel=L"\log(p(\hat{\theta} \mid a_{1:t}, o_{1:t}))")
 
 last_log_probs_random = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed)]
@@ -65,7 +65,7 @@ trace_bilqr_avg = mean([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_bilqr_std = std([ΣΘΘ for ΣΘΘ in values(all_ΣΘΘ)])
 trace_bilqr_ste = trace_bilqr_std / sqrt(length(all_ΣΘΘ))
 
-log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
+# log_probs_bilqr = [log_prob_gaussian(all_mp_true[plotting_seed], all_mp_estimates[plotting_seed][i], all_mp_variances[plotting_seed][i]) for i in 1:t]
 # plot!(time_steps, log_probs_bilqr, label="BiLQR")
 
 last_log_probs_bilqr = [log_prob_gaussian(all_mp_true[seed], all_mp_estimates[seed][end], all_mp_variances[seed][end]) for seed in 1:length(all_mp_estimates) if haskey(all_mp_estimates, seed)]
