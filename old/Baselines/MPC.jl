@@ -2,7 +2,6 @@ using LinearAlgebra
 using ForwardDiff
 using Distributions
 using POMDPs
-using Infiltrator
 using Optim
 
 function cost(Q, R, Q_N, s, u, s_goal)

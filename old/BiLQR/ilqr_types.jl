@@ -2,7 +2,7 @@ using POMDPs
 
 ## POMDP type
 
-abstract type iLQGPOMDP{S,A,O} <: POMDP{S,A,O} end
+abstract type iLQRPOMDP{S,A,O} <: POMDP{S,A,O} end
 
 # interface
 """

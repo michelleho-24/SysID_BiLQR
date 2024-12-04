@@ -2,78 +2,75 @@ using LinearAlgebra
 using ForwardDiff
 using Distributions
 using POMDPs
-using Infiltrator
 using SparseArrays
-# using DifferentialEquations
-# include("super_state.jl")
-# include("ilqr_tests.jl")
 
-form_belief_vector(x,Σ) = [x..., vec(Σ)...]
+"""
+    BiLQRPolicy(pomdp, N, eps, max_iters)
 
-function sigma_pred(pomdp, x::AbstractVector, u::AbstractVector, Σ::AbstractMatrix)
-    At = ForwardDiff.jacobian(x -> dyn_mean(pomdp, x, u), x)
-    return At * Σ * At' + dyn_noise(pomdp, x,u)
+A policy that uses the Belief Iterative Linear Quadratic Regulator (BiLQR) algorithm
+to compute actions for a given belief-based POMDP.
+
+# Fields
+- `pomdp`: The POMDP model.
+- `N::Int`: The planning horizon.
+- `eps::Float64`: Convergence tolerance for the algorithm.
+- `max_iters::Int`: Maximum iterations for the iLQR loop.
+"""
+struct BiLQRPolicy
+    N::Int
+    eps::Float64
+    max_iters::Int
 end
 
-function sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix)
-    Ct = ForwardDiff.jacobian(x -> obs_mean(pomdp,x), x)
-    # println(diag(Σ))
-    S = Ct * Σ * Ct' + obs_noise(pomdp, x)
-    if any(isnan, S) || abs(det(S)) < 1e-12
-        println("BiLQR S is nan, next seed...")
-        return nothing
+"""
+    POMDPs.action(policy::BiLQRPolicy, b)
+
+Compute the action using the BiLQR algorithm for the given belief.
+
+# Arguments
+- `policy::BiLQRPolicy`: The BiLQR policy.
+- `b`: The belief vector.
+
+# Returns
+- The optimal action computed by the BiLQR algorithm.
+"""
+function POMDPs.action(policy::BiLQRPolicy, pomdp::iLQRPOMDP, b)
+    pomdp = policy.pomdp
+
+    # Run the BiLQR algorithm
+    u, action_info = bilqr(
+        pomdp,
+        b;
+        N=policy.N,
+        eps=policy.eps,
+        max_iters=policy.max_iters,
+    )
+
+    # Handle cases where the algorithm fails (e.g., returns `nothing`)
+    if u === nothing
+        error("BiLQR failed to compute an action")
     end
 
-    # check if this line needs obs noise 
-    K = Σ * Ct' * inv(S)
-
-    # check this line 
-    return (I - K * Ct) * Σ
-    # Sigma - Sigma C' inv() C Sigma 
+    return u, action_info 
 end
 
-function update_belief(pomdp::iLQGPOMDP, belief::AbstractVector, u::AbstractVector)
-    # extract mean and covariance from belief state
-    n_states = num_states(pomdp)
-    x = belief[1:n_states]
-    Σ = reshape(belief[n_states+1:end], n_states, n_states)
+"""
+    bilqr(pomdp, b0; N, eps, max_iters)
 
-    # mean update belief using most likely observation (no measurement gain)
-    x_new = dyn_mean(pomdp, x, u)
-    Σ_pred = sigma_pred(pomdp, x,u,Σ)
-    Σ_new = sigma_update(pomdp, x_new, Σ_pred)
+Solve for the optimal action using the Belief Iterative Linear Quadratic Regulator (BiLQR) algorithm.
 
-    if Σ_new === nothing
-        return nothing
-    end
+# Arguments
+- `pomdp`: The POMDP model.
+- `b0`: The initial belief state.
+- `N::Int`: The planning horizon.
+- `eps::Float64`: Convergence tolerance.
+- `max_iters::Int`: Maximum iterations for the iLQR loop.
 
-    return form_belief_vector(x_new,Σ_new)
-end
-
-function superAB(pomdp, q, r, N, s_bar, u_bar)
-
-    A = zeros(N, q, q)
-    B = zeros(N, q, r)
-
-    for k in 1:N
-        # println("k: ", k)
-        A[k, :, :] = ForwardDiff.jacobian(bel -> update_belief(pomdp, bel, u_bar[k, :],), s_bar[k, :])
-        B[k, :, :] = ForwardDiff.jacobian(u -> update_belief(pomdp, s_bar[k, :], u), u_bar[k, :])
-    end
-
-    return A, B
-
-end
-
-function cost(Q, R, Q_N, s, u, s_goal)
-    # Compute the cost of a state-action pair
-    return (s - s_goal)' * Q * (s - s_goal) + u' * R * u + (s - s_goal)' * Q_N * (s - s_goal)
-end
-
-# iLQR function
+# Returns
+- `u_bar[1,:]`: The optimal action for the initial belief.
+- `info_dict`: Additional information about the optimization process.
+"""
 function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
-# function bilqr(pomdp, b0; N = 3, eps=1e-3, max_iters=5)
-# function bilqr(pomdp, b0; N = 1, eps=1e-3, max_iters=2)
 
     if max_iters <= 1
         throw(ArgumentError("Argument `max_iters` must be at least 2."))
@@ -81,10 +78,6 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
 
     # define the dynamics function
     f = update_belief # includes update for the mean AND covariance 
-    # fd = (s, a) -> s + dt * f(s, a)
-
-    # Define constants 
-    # T = pomdp.sim_time  # simulation time
 
     n_states = num_states(pomdp)
     num_belief_states = n_states + n_states^2
@@ -127,12 +120,8 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
     converged = false
 
     for iter in 1:max_iters
-        # println("BiLQR Iteration: ", iter)
-        # println("BiLQR Iteration: ", iter)
 
         A, B = superAB(pomdp, q, r, N, s_bar, u_bar)
-
-        # @infiltrate
 
         # Use Λ for the final state cost
         V = copy(Q_N)
@@ -174,10 +163,6 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
             converged = true
             break
         end
-
-        # print(cost(Q, R, Q_N, s_bar[N+1, :], u_bar[N, :], s_goal))
-        # print(size(s_bar[N+1, :]))
-
     end
 
     # create random action to get random cost
@@ -185,14 +170,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
     # cost_final = cost(Q, R, Q_N, s_bar[N+1, :], u_rand, s_goal)
     cost_final = cost(Q, R, Q_N, s_bar[N+1, :], u_bar[N, :], s_goal)
 
-    # if !converged
-    #     # throw(RuntimeError("iLQR did not converge!"))
-    #     print("iLQR did not converge")
-    # end
-
     info_dict = Dict(:converged => converged, :s_bar => s_bar, :u_bar => u_bar, :cost => cost_final)
-
-    # return s_bar, u_bar, Y, y
    
     return u_bar[1,:], info_dict
 end
