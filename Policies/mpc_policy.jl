@@ -13,12 +13,14 @@ A policy that uses Model Predictive Control (MPC) to compute actions for a given
 - `pomdp`: The POMDP model.
 - `horizon::Int`: The planning horizon for MPC.
 """
-@with_kw struct MPCPolicy
-    horizon::Int = 10
+@with_kw struct MPCPolicy <: POMDPs.Policy
+    planning_horizon::Int # = 10
+    pomdp::iLQRPOMDP
+    horizon::Int
 end 
 
 """
-    POMDPs.action(policy::MPCPolicy, b)
+    action_info(policy::MPCPolicy, b)
 
 Compute the action using MPC for the given belief.
 
@@ -29,8 +31,9 @@ Compute the action using MPC for the given belief.
 # Returns
 - The optimal action computed by solving the MPC optimization problem.
 """
-function POMDPs.action(policy::MPCPolicy, pomdp::iLQRPOMDP, b)
+function action_info(policy::MPCPolicy, b)
     horizon = policy.horizon
+    pomdp = policy.pomdp
     n_actions = num_actions(pomdp)
     num_states = num_states(pomdp)
 

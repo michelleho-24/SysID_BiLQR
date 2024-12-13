@@ -53,7 +53,7 @@ function run_experiment(seed, pomdp, policy, num_steps)
     b0 = initialstate_distribution(pomdp).support[1]
 
     # Run simulation via stepthrough
-    for (b, a, _, _) in stepthrough(pomdp, policy, "b,a,z,r", belief=b0)
+    for (b, a, _, _) in simulate(pomdp, policy, "b,a,z,r", belief=b0)
         # Store data
         push!(all_b, b)
         push!(all_u, a)

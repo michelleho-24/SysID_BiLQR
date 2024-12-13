@@ -16,14 +16,16 @@ to compute actions for a given belief-based POMDP.
 - `eps::Float64`: Convergence tolerance for the algorithm.
 - `max_iters::Int`: Maximum iterations for the iLQR loop.
 """
-struct BiLQRPolicy
+struct BiLQRPolicy <: POMDPs.Policy
+    pomdp::iLQRPOMDP
+    horizon::Int
     N::Int
     eps::Float64
     max_iters::Int
 end
 
 """
-    POMDPs.action(policy::BiLQRPolicy, b)
+    action_info(policy::BiLQRPolicy, b)
 
 Compute the action using the BiLQR algorithm for the given belief.
 
@@ -34,7 +36,7 @@ Compute the action using the BiLQR algorithm for the given belief.
 # Returns
 - The optimal action computed by the BiLQR algorithm.
 """
-function POMDPs.action(policy::BiLQRPolicy, pomdp::iLQRPOMDP, b)
+function action_info(policy::BiLQRPolicy, b)
     pomdp = policy.pomdp
 
     # Run the BiLQR algorithm
@@ -53,6 +55,8 @@ function POMDPs.action(policy::BiLQRPolicy, pomdp::iLQRPOMDP, b)
 
     return u, action_info 
 end
+
+action_info(policy::BiLQRPolicy, b::GaussianBelief) = action_info(policy, b.mean)
 
 """
     bilqr(pomdp, b0; N, eps, max_iters)

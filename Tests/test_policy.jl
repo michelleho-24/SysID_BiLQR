@@ -12,7 +12,7 @@ include("../BiLQR/ekf.jl")
 include("../Baselines/Regression.jl")
 
 """
-    system_identification(pomdp::CartpoleSysIDPOMDP, policy, num_steps)
+    simulate(pomdp::iLQRPOMDP, policy, num_steps)
 
 Simulates system identification for the Cartpole using the given policy.
 
@@ -25,38 +25,48 @@ Simulates system identification for the Cartpole using the given policy.
 - A tuple `(all_b, mp_estimates, mp_variances, ΣΘΘ, all_s, all_u, mp_true)`.
 """
 
-function step_through(pomdp::iLQRPOMDP, time_steps::Int, policy)
+function simulate(pomdp::iLQRPOMDP, time_steps::Int, policy)
     b = initialstate_distribution(pomdp).support[1]
-    s_true = mdp.s_init
+    s = mdp.s_init
 
     # Data storage
-
-    ##TODO: fix for general iLQRPOMDP
-    mp_estimates = [b[num_states(pomdp)]]
-    mp_variances = [b[end - 1]]
-    all_s = [s_true]
+    vec_estimates = [b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]]
+    variances = [diagm(b[end-num_sysvars(pomdp) + 1:end])]
+    all_s = [s]
     all_b = [b]
     all_u = []
 
     # Simulation loop
     for t in 1:time_steps
         # Get action from policy
-        a, action_info = POMDPs.action(policy, pomdp, b)
+        a, action_info = action_info(policy, b)
 
         # Store the action
         push!(all_u, a)
 
         # Step the POMDP
-        b, _, _ = POMDPs.gen(pomdp, b, a, Random.default_rng())
+        s, _, _ = POMDPs.gen(pomdp, s, a, Random.default_rng())
 
-        # Store belief and system parameters
+        # Observation 
+        z = POMDPs.observation(pomdp, s, a, Random.default_rng())
+
+        # Update belief
+        b = ekf(pomdp, b, a, z)
+        if b === nothing
+            return nothing
+        end
+        
+        # Extract the mean and covariance from belief
+        m = b[1:num_states(pomdp)]
+        Σ = reshape(b[num_states(pomdp) + 1:end], num_states(pomdp), num_states(pomdp))
+        
+        # Store estimates
+        push!(vec_estimates, b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]) # 8 x 1
+        push!(variances, diagm(b[end-num_sysvars(pomdp) + 1:end])) # 8x8
         push!(all_b, b)
-        push!(mp_estimates, b[num_states(pomdp)])
-        push!(mp_variances, b[end - 1])
 
         # Simulate true state (process noise included)
-        s_true = b[1:num_states(pomdp)]
-        push!(all_s, s_true)
+        push!(all_s, s)
     end
 
     ΣΘΘ = b[end]
