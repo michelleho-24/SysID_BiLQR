@@ -3,3 +3,6 @@
 results*
 *.txt
 *.jld2
+
+# hide all manifests
+*Manifest.toml

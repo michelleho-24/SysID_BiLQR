@@ -3,7 +3,6 @@ module BiLQR
 # greet() = print("Hello World!")
 using POMDPs
 using POMDPModels
-using POMDPSimulators
 using POMDPTools
 
 using LinearAlgebra
@@ -29,7 +28,7 @@ export
 include("ilqr_pomdp.jl")
 
 export 
-    CartpoleMDP
+    CartpoleMDP,
     AirplaneMDP 
 
 include("./problems/cartpole_pomdp.jl")
@@ -46,7 +45,7 @@ include("./policies/mpc_policy.jl")
 include("./policies/random_policy.jl")
 
 export
-    ekf 
+    ekf,
     regression
 
 include("./updaters/ekf.jl")
