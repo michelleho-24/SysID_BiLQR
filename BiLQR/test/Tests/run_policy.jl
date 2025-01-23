@@ -1,25 +1,31 @@
-using POMDPs
-using Random
-using LinearAlgebra
-using ForwardDiff
-using Distributions
-using Plots
 
 """
-    simulate(pomdp::iLQRPOMDP, policy, num_steps)
+    simulate(pomdp::iLQRPOMDP, num_steps, policy)
 
 Simulates system identification for the Cartpole using the given policy.
 
 # Arguments
 - `pomdp`: The Cartpole system identification POMDP.
-- `policy`: The policy to be used (e.g., BiLQR, MPC, etc.).
 - `num_steps`: Number of simulation steps.
+- `policy`: The policy to be used (e.g., BiLQR, MPC, etc.).
 
 # Returns
 - A tuple `(all_b, mp_estimates, mp_variances, ΣΘΘ, all_s, all_u, mp_true)`.
 """
 
-function simulate(pomdp::iLQRPOMDP, time_steps::Int, policy)
+##TODO: can use stepthrough to get the true state and action
+# stepthrough(pomdp::POMDP, policy::Policy, [up::Updater, [initial_belief, [initial_state]]], [spec]; [kwargs...])
+# pomdp = BabyPOMDP()
+# policy = RandomPolicy(pomdp)
+
+# for (s, a, o, r) in stepthrough(pomdp, policy, "s,a,o,r", max_steps=10)
+#     println("in state $s")
+#     println("took action $o")
+#     println("received observation $o and reward $r")
+# end
+
+function simulate(time_steps::Int, policy, belief_updater)
+    pomdp = policy.pomdp
     b = initialstate_distribution(pomdp).support[1]
     s = mdp.s_init
 
@@ -45,7 +51,7 @@ function simulate(pomdp::iLQRPOMDP, time_steps::Int, policy)
         z = POMDPs.observation(pomdp, s, a, Random.default_rng())
 
         # Update belief
-        b = ekf(pomdp, b, a, z)
+        b = belief_updater.update(updater, b, a, z)
         if b === nothing
             return nothing
         end

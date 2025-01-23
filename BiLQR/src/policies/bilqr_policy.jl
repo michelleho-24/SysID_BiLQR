@@ -14,15 +14,9 @@ to compute actions for a given belief-based POMDP.
 """
 struct BiLQRPolicy <: POMDPs.Policy
     pomdp::iLQRPOMDP
-    horizon::Int
     N::Int
     eps::Float64
     max_iters::Int
-
-    Q::Matrix{Float64}
-    R::Matrix{Float64}
-    Q_N::Matrix{Float64}
-    Λ::Matrix{Float64}
 end
 
 """
@@ -37,7 +31,7 @@ Compute the action using the BiLQR algorithm for the given belief.
 # Returns
 - The optimal action computed by the BiLQR algorithm.
 """
-function POMDPTools.action_info(policy::BiLQRPolicy, b)
+function action_info(policy::BiLQRPolicy, b)
     pomdp = policy.pomdp
 
     # Run the BiLQR algorithm

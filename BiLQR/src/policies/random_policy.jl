@@ -10,7 +10,6 @@ A policy that generates random actions within specified ranges.
 """
 struct RandomPolicy <: POMDPs.Policy
     pomdp::iLQRPOMDP
-    horizon::Int
     # action_ranges::Vector{Tuple{Float64, Float64}}
 end
 
@@ -28,7 +27,7 @@ Generate a random action based on the specified ranges in the `RandomPolicy`.
   - `action`: The randomly generated action vector.
   - `action_info`: A dictionary containing additional information about the action generation.
 """
-function POMDPTools.action_info(policy::RandomPolicy, b)
+function action_info(policy::RandomPolicy, b)
     # Extract action ranges
     pomdp = policy.pomdp
 

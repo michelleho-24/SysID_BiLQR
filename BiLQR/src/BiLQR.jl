@@ -30,10 +30,10 @@ include("ilqr_pomdp.jl")
 
 export 
     CartpoleMDP
-    # AirplaneMDP 
+    AirplaneMDP 
 
 include("./problems/cartpole_pomdp.jl")
-# include("./problems/airplane_pomdp.jl")
+include("./problems/airplane_pomdp.jl")
 
 export
     BiLQRPolicy,
@@ -47,10 +47,10 @@ include("./policies/random_policy.jl")
 
 export
     ekf 
-    # regression
+    regression
 
 include("./updaters/ekf.jl")
-# include("./updaters/regression.jl")
+include("./updaters/regression.jl")
 
 # export 
     # plotting 

@@ -1,11 +1,4 @@
 
-#     Σ0::Matrix{Float64} # = diagm([1e-4, 1e-4, 1e-4, 1e-4, 2.0])
-#     b0::MvNormal = MvNormal([0.0, π/2, 0.0, 0.0, 2.0], Σ0)
-#     δt::Float64 = 0.1
-#     mc::Float64 = 1.0
-#     g::Float64 = 9.81
-#     l::Float64 = 1.0
-
 mutable struct CartpoleMDP <: iLQRPOMDP{AbstractVector, AbstractVector, AbstractVector}
     #TODO: add checks for matrix sizes 
     Q::Matrix{Float64}

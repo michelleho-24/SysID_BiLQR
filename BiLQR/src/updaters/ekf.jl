@@ -1,6 +1,10 @@
 
+struct EKFUpdater <: POMDPs.Updater
+    pomdp::iLQRPOMDP
+    
+end
 
-function ekf(pomdp, b, a, z)
+function update(ekf::EKFUpdater, b, a, z)
     # Separate belief into mean and covariance
     num_state = num_states(pomdp)
     m = b[1:num_state]

@@ -1,17 +1,16 @@
 
 """
-    MPCPolicy(pomdp, horizon)
+    MPCPolicy(N, pomdp)
 
 A policy that uses Model Predictive Control (MPC) to compute actions for a given POMDP.
 
 # Fields
 - `pomdp`: The POMDP model.
-- `horizon::Int`: The planning horizon for MPC.
+- `N::Int`: The planning horizon for MPC.
 """
 @with_kw struct MPCPolicy <: POMDPs.Policy
-    planning_horizon::Int # = 10
+    N::Int # = 10
     pomdp::iLQRPOMDP
-    horizon::Int
 end 
 
 """
@@ -26,23 +25,23 @@ Compute the action using MPC for the given belief.
 # Returns
 - The optimal action computed by solving the MPC optimization problem.
 """
-function POMDPTools.action_info(policy::MPCPolicy, b)
-    horizon = policy.horizon
+function action_info(policy::MPCPolicy, b)
+    N = policy.N
     pomdp = policy.pomdp
     n_actions = num_actions(pomdp)
     num_states = num_states(pomdp)
 
     # Initial random actions for optimization
-    initial_actions = [randn(n_actions) for _ in 1:horizon]
+    initial_actions = [randn(n_actions) for _ in 1:N]
     flat_initial_actions = reduce(vcat, initial_actions)
 
     # Define the cost function
     function cost_function(flat_actions)
-        actions = [flat_actions[(i-1)*n_actions+1:i*n_actions] for i in 1:horizon]
+        actions = [flat_actions[(i-1)*n_actions+1:i*n_actions] for i in 1:N]
         belief = b
         total_cost = 0.0
 
-        for t in 1:horizon
+        for t in 1:N
             action = actions[t]
             state = dyn_mean(pomdp, belief[1:num_states], action)  # Transition dynamics
 
@@ -58,7 +57,7 @@ function POMDPTools.action_info(policy::MPCPolicy, b)
 
     # Extract information about the optimization process
     total_cost = result.minimum
-    predicted_actions = [result.minimizer[(i-1)*n_actions+1:i*n_actions] for i in 1:horizon]
+    predicted_actions = [result.minimizer[(i-1)*n_actions+1:i*n_actions] for i in 1:N]
 
     # Simulate the state trajectory for `action_info`
     predicted_states = []
