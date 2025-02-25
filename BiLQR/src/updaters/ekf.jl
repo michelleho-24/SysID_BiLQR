@@ -1,55 +1,51 @@
+# using BiLQR 
+# using ForwardDiff
 
 struct EKFUpdater <: POMDPs.Updater
     pomdp::iLQRPOMDP
+end
+
+function m_sigma_update(pomdp, x::AbstractVector, Σ::AbstractMatrix, u::AbstractVector, z::AbstractVector)
     
+    Ct = ForwardDiff.jacobian(x -> obs_mean(pomdp,x, u), x)
+
+    y = z - obs_mean(pomdp, x, u)
+    S = Ct * Σ * Ct' + obs_noise(pomdp, x, u)
+
+    # if any(isnan, S) || abs(det(S)) < 1e-12
+    #     println("BiLQR S is nan, next seed...")
+    #     return nothing
+    # end
+
+    # check if this line needs obs noise 
+    K = Σ * Ct' * inv(S)
+
+    # Update the mean estimate
+    m_new = x + K * y
+
+    # Update the covariance estimate
+    Σ_new = (I - K * Ct) * Σ
+
+    return m_new, Σ_new
+
 end
 
 function update(ekf::EKFUpdater, b, a, z)
-    # Separate belief into mean and covariance
-    num_state = num_states(pomdp)
-    m = b[1:num_state]
-    Σ = reshape(b[num_state + 1:end], num_state, num_state)
+    
+    pomdp = ekf.pomdp
+    m, Σ = b[1:pomdp.num_states], reshape(b[pomdp.num_states + 1:end], pomdp.num_states, pomdp.num_states)
 
-    # Predict mean
     m_pred = dyn_mean(pomdp, m, a)
 
-    # Calculate Jacobians
-    # Correctly compute the Jacobian of dyn_mean with respect to s
-    A = ForwardDiff.jacobian(s -> dyn_mean(pomdp, s, a), m)
+    At = ForwardDiff.jacobian(x -> dyn_mean(pomdp, x, a), m_pred)
+    Σ_pred = At * Σ * At' + dyn_noise(pomdp, m_pred, a)
 
-    # Compute the Jacobian of obs_mean with respect to s, evaluated at m_pred
-    C = ForwardDiff.jacobian(s -> obs_mean(pomdp, s), m_pred)
+    m_new, Σ_new = m_sigma_update(pomdp, m_pred, Σ_pred, a, z)
 
-    # Noise matrices
-    W_obs = pomdp.W_obs_ekf
-    W_proc = pomdp.W_process
+    # if Σ_new === nothing
+    #     return nothing
+    # end
 
-    # Predict covariance
-    Σ_pred = A * Σ * A' + W_proc
+    return [m..., vec(Σ)...]
 
-    # Update step
-    # Compute the innovation (difference between actual observation and predicted observation)
-    y = z - obs_mean(pomdp, m_pred)
-
-    # Compute the innovation covariance
-    S = C * Σ_pred * C' + W_obs
-
-    if any(isnan, S) || abs(det(S)) < 1e-12
-        println("S is nan, next seed...")
-        return nothing
-    end
-
-    # Compute the Kalman Gain
-    K = Σ_pred * C' * inv(S)
-
-    # Update the mean estimate
-    m_new = m_pred + K * y
-
-    # Update the covariance estimate
-    Σ_new = (I - K * C) * Σ_pred
-
-    # # Ensure θ stays within [-π, π]
-    # m_new[2] = mod(m_new[2] + π, 2π) - π
-
-    return vcat(m_new, Σ_new[:])
 end

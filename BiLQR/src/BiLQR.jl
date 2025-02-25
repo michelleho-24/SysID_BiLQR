@@ -45,17 +45,19 @@ include("./policies/mpc_policy.jl")
 include("./policies/random_policy.jl")
 
 export
-    ekf,
-    regression
+    update,
+    EKFUpdater
 
 include("./updaters/ekf.jl")
-include("./updaters/regression.jl")
+# include("./updaters/regression.jl")
 
-# export 
+export 
+    create_sample_cartpole,
+    simulate
     # plotting 
     # saving 
     # loading 
 
-# include("./utils.jl")
+include("./utils.jl")
 
 end # module BiLQR

@@ -25,9 +25,11 @@ Simulates system identification for the Cartpole using the given policy.
 # end
 
 function simulate(time_steps::Int, policy, belief_updater)
-    pomdp = policy.pomdp
+    rng = Random.default_rng()
+    pomdp = policy.pomdp # TODO: ensure policy.pomdp = belief_updater.pomdp? 
+
     b = initialstate_distribution(pomdp).support[1]
-    s = mdp.s_init
+    s = pommdp.s_init
 
     # Data storage
     vec_estimates = [b[num_states(pomdp) - num_sysvars(pomdp) + 1:num_states(pomdp)]]
@@ -35,6 +37,8 @@ function simulate(time_steps::Int, policy, belief_updater)
     all_s = [s]
     all_b = [b]
     all_u = []
+    means = []
+    variances = []
 
     # Simulation loop
     for t in 1:time_steps
@@ -45,13 +49,14 @@ function simulate(time_steps::Int, policy, belief_updater)
         push!(all_u, a)
 
         # Step the POMDP
-        s, _, _ = POMDPs.gen(pomdp, s, a, Random.default_rng())
+        s, _, _ = POMDPs.gen(pomdp, s, a, rng)
 
         # Observation 
-        z = POMDPs.observation(pomdp, s, a, Random.default_rng())
+        z = POMDPs.observation(pomdp, s, a, rng)
 
         # Update belief
-        b = belief_updater.update(updater, b, a, z)
+        b = belief_updater.update(pomdp, b, a, z)
+        
         if b === nothing
             return nothing
         end
