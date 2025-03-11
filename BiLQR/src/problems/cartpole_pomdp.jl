@@ -32,8 +32,7 @@ mutable struct CartpoleMDP <: iLQRPOMDP{AbstractVector, AbstractVector, Abstract
     W_obs_ekf::Matrix{Float64}
 
     # Dimensionality
-    #TODO: make states belief states, make new variable for true states
-    num_states::Int
+    num_states::Int # number of belief states 
     num_actions::Int
     num_observations::Int
     num_sysvars::Int
@@ -43,7 +42,7 @@ mutable struct CartpoleMDP <: iLQRPOMDP{AbstractVector, AbstractVector, Abstract
     function CartpoleMDP(
         Q::AbstractMatrix{Float64}, R::AbstractMatrix{Float64}, Q_N::AbstractMatrix{Float64}, Λ::AbstractMatrix{Float64},
         m0::Vector{Float64}, Σ0::Vector{Float64}, δt::Float64, mc::Float64, g::Float64, l::Float64,
-        W_process::AbstractMatrix{Float64}, W_obs::AbstractMatrix{Float64}, num_states::Int, num_actions::Int, num_observations::Int, num_sysvars::Int
+        W_process::AbstractMatrix{Float64}, W_obs::AbstractMatrix{Float64}, num_truestates::Int, num_actions::Int, num_observations::Int, num_sysvars::Int
     )
         b0 = MvNormal(m0, diagm(Σ0))
         s_init = rand(b0)
@@ -52,36 +51,34 @@ mutable struct CartpoleMDP <: iLQRPOMDP{AbstractVector, AbstractVector, Abstract
         s_goal = [s_init...; vec(zeros(5,5))...]
 
         # Create W_state_process as a diagonal matrix with the first num_states - num_sysvars diagonal elements of W_process
-        vector = diag(W_process)  # This correctly gives [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-        # Extract the first (num_states - num_sys_vars) elements
+        vector = diag(W_process)  
         sub_vector = vector[1:(num_states - num_sysvars)]  # First 7 elements
-
-        # Create W_state_process as a diagonal matrix
         W_state_process = diagm(sub_vector)
 
         true_params = []
         push!(true_params, mp_true)
 
-        # TODO: remove mp_true
-        model = new(Q, R, Q_N, Λ, m0, Σ0, s_init, mp_true, s_goal, δt, mc, g, l, W_state_process, W_process, W_obs, W_obs, 
+        num_states = num_truestates + num_sysvars
+
+        model = new(Q, R, Q_N, Λ, m0, Σ0, b0, s_init, mp_true, s_goal, δt, mc, g, l, W_state_process, W_process, W_obs, 
                     num_states, num_actions, num_observations, num_sysvars)
         
         return model
     
         
-        # # Dimension validation
-        # @assert size(Q) == (num_states(model), num_states(model)) "Q matrix must be ${num_states}x${num_states}"
-        # @assert size(Q_N) == (num_states(model), num_states(model)) "Q_N matrix must be ${num_states}x${num_states}"
-        # @assert size(R) == (num_actions(model), num_actions(model)) "R matrix must be ${num_actions}x${num_actions}"
-        # @assert size(Λ) == (num_states(model), num_states(model)) "Λ matrix must be ${num_states}x${num_states}"
-        # @assert length(m0) == num_states(model) "Initial mean vector (m0) must have length ${num_states}"
-        # @assert size(Σ0) == (num_states(model), num_states(model)) "Initial covariance matrix (Σ0) must be ${num_states}x${num_states}"
-        # @assert size(W_state_process) == (num_states(model), num_states(model)) "W_state_process must be ${num_states}x${num_states}"
-        # @assert size(W_process) == (num_states(model), num_states(model)) "W_process must be ${num_states}x${num_states}"
-        # @assert size(W_obs) == (num_observations(model), num_observations(model)) "W_obs must be ${num_observations}x${num_observations}"
-        # @assert size(W_obs_ekf) == (num_observations(model), num_observations(model)) "W_obs_ekf must be ${num_observations}x${num_observations}"
-    end 
+        # Dimension validation
+        @assert size(Q) == (num_states(model), num_states(model)) "Q matrix must be $(num_states(model))x$(num_states(model))"
+        @assert size(Q_N) == (num_states(model), num_states(model)) "Q_N matrix must be $(num_states(model))x$(num_states(model))"
+        @assert size(R) == (num_actions(model), num_actions(model)) "R matrix must be $(num_actions(model))x$(num_actions(model))"
+        @assert size(Λ) == (num_states(model), num_states(model)) "Λ matrix must be $(num_states(model))x$(num_states(model))"
+        @assert length(m0) == num_states(model) "Initial mean vector (m0) must have length $(num_states(model))"
+        @assert size(Σ0) == (num_states(model), num_states(model)) "Initial covariance matrix (Σ0) must be $(num_states(model))x$(num_states(model))"
+        @assert size(W_state_process) == (num_states(model), num_states(model)) "W_state_process must be $(num_states(model))x$(num_states(model))"
+        @assert size(W_process) == (num_states(model), num_states(model)) "W_process must be $(num_states(model))x$(num_states(model))"
+        @assert size(W_obs) == (num_observations(model), num_observations(model)) "W_obs must be $(num_observations(model))x$(num_observations(model))"
+        @assert size(W_obs_ekf) == (num_observations(model), num_observations(model)) "W_obs_ekf must be $(num_observations(model))x$(num_observations(model))"
+        
+     end 
 end
 
 # ==============================================================================

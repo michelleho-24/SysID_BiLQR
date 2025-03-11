@@ -38,7 +38,7 @@ function obs_noise end
 
     Return the dimensionality of the state space in the POMDP.
 """
-num_states(p::iLQRPOMDP) = p.num_states # throw exceptions if not defined as an integer 
+num_truestates(p::iLQRPOMDP) = p.num_states # throw exceptions if not defined as an integer 
 
 """
     num_actions(p::iLQRPOMDP)::Int
