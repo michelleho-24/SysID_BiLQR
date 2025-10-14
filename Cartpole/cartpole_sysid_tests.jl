@@ -28,6 +28,12 @@ function system_identification(seed, method)
     
     # remember Σ0 now is a vector of diagonal elements of covariance matrix (not vector of all elements in covariance matrix)
     b = vcat(s_true[1:end - num_sysvars(pomdp)], pomdp.mp_true, pomdp.Σ0[:])
+    println("b", size(b))
+    println("s_true", size(s_true))
+    println("pomdp.mp_true", (pomdp.mp_true))
+    println("pomdp.Σ0", (pomdp.Σ0[:]))
+    println("sys vars", num_sysvars(pomdp))
+
     # Simulation parameters
     num_steps = 50
     # Data storage for plotting
