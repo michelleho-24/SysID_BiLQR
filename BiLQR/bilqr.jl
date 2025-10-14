@@ -50,6 +50,16 @@ function update_belief(pomdp::iLQGPOMDP, belief::AbstractVector, u::AbstractVect
     return form_belief_vector(x_new,Σ_new)
 end
 
+function safe_update_belief(pomdp, belief, u)
+    result = update_belief(pomdp, belief, u)
+    if result === nothing
+        # Return a zero vector of the correct size to allow jacobian computation to continue
+        # This will be caught by the main check
+        return zeros(length(belief))
+    end
+    return result
+end
+
 function superAB(pomdp, q, r, N, s_bar, u_bar)
 
     A = zeros(N, q, q)
@@ -57,8 +67,19 @@ function superAB(pomdp, q, r, N, s_bar, u_bar)
 
     for k in 1:N
         # println("k: ", k)
-        A[k, :, :] = ForwardDiff.jacobian(bel -> update_belief(pomdp, bel, u_bar[k, :],), s_bar[k, :])
-        B[k, :, :] = ForwardDiff.jacobian(u -> update_belief(pomdp, s_bar[k, :], u), u_bar[k, :])
+        
+        # Check if belief update will succeed before computing jacobian
+        test_belief = update_belief(pomdp, s_bar[k, :], u_bar[k, :])
+        if test_belief === nothing
+            return nothing  # Propagate failure up to skip this seed
+        end
+        
+        try
+            A[k, :, :] = ForwardDiff.jacobian(bel -> safe_update_belief(pomdp, bel, u_bar[k, :]), s_bar[k, :])
+            B[k, :, :] = ForwardDiff.jacobian(u -> safe_update_belief(pomdp, s_bar[k, :], u), u_bar[k, :])
+        catch e
+            return nothing  # If jacobian computation fails, skip this seed
+        end
     end
 
     return A, B
@@ -132,7 +153,11 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
         # println("BiLQR Iteration: ", iter)
         # println("BiLQR Iteration: ", iter)
 
-        A, B = superAB(pomdp, q, r, N, s_bar, u_bar)
+        result = superAB(pomdp, q, r, N, s_bar, u_bar)
+        if result === nothing
+            return nothing  # Propagate failure to skip this seed
+        end
+        A, B = result
 
         # @infiltrate
 
