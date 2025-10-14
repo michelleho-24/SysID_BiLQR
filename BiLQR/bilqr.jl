@@ -101,6 +101,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
     Q_N[1:n_states, 1:n_states] .= pomdp.Q_N
 
     q = size(Q,1)  # state dimension including means and covariances, was n
+    # println("q: ", q)
     r = size(R, 1)  # control dimension, was m, should be 2 
 
     # Initialize gains `Y` and offsets `y` for the policy
@@ -110,6 +111,7 @@ function bilqr(pomdp, b0; N = 10, eps=1e-3, max_iters=100)
     # Initialize the nominal trajectory `(s_bar, u_bar)`, and the deviations `(ds, du)`
     u_bar = zeros(Float64, N, r)
     s_bar = zeros(Float64, N+1, q)
+    # println("size s_bar: ", size(s_bar))
     s_bar[1, :] = b0
 
     for k in 1:N
