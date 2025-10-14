@@ -13,7 +13,7 @@ all_mp_true = Dict{Int, Float64}()
 
 method = "bilqr"
 
-jld2_file = "$(method)_cartpolefull_sysid_results.jld2"
+jld2_file = "test.jld2"
 if isfile(jld2_file)
     @load jld2_file all_b all_mp_estimates all_mp_variances all_ΣΘΘ all_s all_u all_mp_true
 end

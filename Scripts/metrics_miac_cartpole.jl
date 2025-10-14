@@ -69,3 +69,9 @@ println("$(method): ", avg_last_log_prob, " ± ", ste_last_log_prob)
 
 println("Expected Reward")
 println("$(method): ", mean_reward, " ± ", std_reward)
+
+# plot mass estimates with standard deviation ribbon
+p = plot(time_steps, [(all_mp_estimates[plotting_seed][i]) for i in 1:t], ribbon=[(all_mp_variances[plotting_seed][i]) for i in 1:t], label="EKF", xlabel="Time Step", ylabel="Mass Estimate") 
+
+# show plot
+display(p)

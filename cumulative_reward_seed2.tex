@@ -1,0 +1,197 @@
+% Recommended preamble:
+% \usetikzlibrary{arrows.meta}
+% \usetikzlibrary{backgrounds}
+% \usepgfplotslibrary{patchplots}
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{%
+%     layers/standard/.define layer set={%
+%         background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+%     }{
+%         grid style={/pgfplots/on layer=axis grid},%
+%         tick style={/pgfplots/on layer=axis ticks},%
+%         axis line style={/pgfplots/on layer=axis lines},%
+%         label style={/pgfplots/on layer=axis descriptions},%
+%         legend style={/pgfplots/on layer=axis descriptions},%
+%         title style={/pgfplots/on layer=axis descriptions},%
+%         colorbar style={/pgfplots/on layer=axis descriptions},%
+%         ticklabel style={/pgfplots/on layer=axis tick labels},%
+%         axis background@ style={/pgfplots/on layer=axis background},%
+%         3d box foreground style={/pgfplots/on layer=axis foreground},%
+%     },
+% }
+
+\begin{tikzpicture}[/tikz/background rectangle/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, draw opacity={1.0}}, show background rectangle]
+\begin{axis}[point meta max={nan}, point meta min={nan}, legend cell align={left}, legend columns={1}, title={}, title style={at={{(0.5,1)}}, anchor={south}, font={{\fontsize{14 pt}{18.2 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}, align={center}}, legend style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid, fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, text opacity={1.0}, font={{\fontsize{12 pt}{15.600000000000001 pt}\selectfont}}, text={rgb,1:red,0.0;green,0.0;blue,0.0}, cells={anchor={center}}, at={(0.02, 0.98)}, anchor={north west}}, axis background/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, opacity={1.0}}, anchor={north west}, xshift={1.0mm}, yshift={-1.0mm}, width={150.4mm}, height={99.6mm}, scaled x ticks={false}, xlabel={Time Step}, x tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, x tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={0}}, xlabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{12 pt}{15.600000000000001 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, xmajorgrids={true}, xmin={-0.4700000000000024}, xmax={51.47}, xticklabels={{$0$,$10$,$20$,$30$,$40$,$50$}}, xtick={{0.0,10.0,20.0,30.0,40.0,50.0}}, xtick align={inside}, xticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, x grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis x line*={left}, x axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, scaled y ticks={false}, ylabel={Accumulated Reward}, y tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, y tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={0}}, ylabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{12 pt}{15.600000000000001 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, ymajorgrids={true}, ymin={-1.1200000000000045}, ymax={109.12}, yticklabels={{$0$,$25$,$50$,$75$,$100$}}, ytick={{0.0,25.0,50.0,75.0,100.0}}, ytick align={inside}, yticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, y grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis y line*={left}, y axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, colorbar={false}]
+    \addplot[color={rgb,1:red,0.0;green,0.6056;blue,0.9787}, name path={1}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  3.0  \\
+            2.0  4.0  \\
+            3.0  5.0  \\
+            4.0  6.0  \\
+            5.0  8.0  \\
+            6.0  11.0  \\
+            7.0  13.0  \\
+            8.0  15.0  \\
+            9.0  17.0  \\
+            10.0  19.0  \\
+            11.0  21.0  \\
+            12.0  23.0  \\
+            13.0  25.0  \\
+            14.0  27.0  \\
+            15.0  29.0  \\
+            16.0  31.0  \\
+            17.0  33.0  \\
+            18.0  35.0  \\
+            19.0  38.0  \\
+            20.0  40.0  \\
+            21.0  43.0  \\
+            22.0  45.0  \\
+            23.0  47.0  \\
+            24.0  49.0  \\
+            25.0  51.0  \\
+            26.0  53.0  \\
+            27.0  55.0  \\
+            28.0  57.0  \\
+            29.0  60.0  \\
+            30.0  63.0  \\
+            31.0  66.0  \\
+            32.0  69.0  \\
+            33.0  71.0  \\
+            34.0  74.0  \\
+            35.0  76.0  \\
+            36.0  78.0  \\
+            37.0  80.0  \\
+            38.0  82.0  \\
+            39.0  84.0  \\
+            40.0  86.0  \\
+            41.0  88.0  \\
+            42.0  90.0  \\
+            43.0  92.0  \\
+            44.0  94.0  \\
+            45.0  96.0  \\
+            46.0  98.0  \\
+            47.0  100.0  \\
+            48.0  102.0  \\
+            49.0  104.0  \\
+            50.0  106.0  \\
+        }
+        ;
+    \addlegendentry {BiLQR}
+    \addplot[color={rgb,1:red,0.8889;green,0.4356;blue,0.2781}, name path={2}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  2.0  \\
+            2.0  3.0  \\
+            3.0  5.0  \\
+            4.0  6.0  \\
+            5.0  6.0  \\
+            6.0  6.0  \\
+            7.0  6.0  \\
+            8.0  8.0  \\
+            9.0  9.0  \\
+            10.0  10.0  \\
+            11.0  11.0  \\
+            12.0  12.0  \\
+            13.0  13.0  \\
+            14.0  14.0  \\
+            15.0  15.0  \\
+            16.0  16.0  \\
+            17.0  17.0  \\
+            18.0  18.0  \\
+            19.0  19.0  \\
+            20.0  21.0  \\
+            21.0  22.0  \\
+            22.0  23.0  \\
+            23.0  24.0  \\
+            24.0  25.0  \\
+            25.0  26.0  \\
+            26.0  27.0  \\
+            27.0  28.0  \\
+            28.0  29.0  \\
+            29.0  30.0  \\
+            30.0  31.0  \\
+            31.0  33.0  \\
+            32.0  34.0  \\
+            33.0  36.0  \\
+            34.0  37.0  \\
+            35.0  38.0  \\
+            36.0  39.0  \\
+            37.0  40.0  \\
+            38.0  41.0  \\
+            39.0  42.0  \\
+            40.0  43.0  \\
+            41.0  44.0  \\
+            42.0  45.0  \\
+            43.0  46.0  \\
+            44.0  47.0  \\
+            45.0  49.0  \\
+            46.0  50.0  \\
+            47.0  51.0  \\
+            48.0  52.0  \\
+            49.0  54.0  \\
+            50.0  55.0  \\
+        }
+        ;
+    \addlegendentry {Random+EKF}
+    \addplot[color={rgb,1:red,0.2422;green,0.6433;blue,0.3044}, name path={3}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  3.0  \\
+            2.0  4.0  \\
+            3.0  5.0  \\
+            4.0  7.0  \\
+            5.0  9.0  \\
+            6.0  11.0  \\
+            7.0  12.0  \\
+            8.0  13.0  \\
+            9.0  13.0  \\
+            10.0  14.0  \\
+            11.0  15.0  \\
+            12.0  15.0  \\
+            13.0  16.0  \\
+            14.0  17.0  \\
+            15.0  18.0  \\
+            16.0  18.0  \\
+            17.0  19.0  \\
+            18.0  19.0  \\
+            19.0  20.0  \\
+            20.0  21.0  \\
+            21.0  21.0  \\
+            22.0  21.0  \\
+            23.0  22.0  \\
+            24.0  22.0  \\
+            25.0  22.0  \\
+            26.0  23.0  \\
+            27.0  23.0  \\
+            28.0  23.0  \\
+            29.0  24.0  \\
+            30.0  25.0  \\
+            31.0  26.0  \\
+            32.0  27.0  \\
+            33.0  28.0  \\
+            34.0  28.0  \\
+            35.0  28.0  \\
+            36.0  28.0  \\
+            37.0  28.0  \\
+            38.0  29.0  \\
+            39.0  30.0  \\
+            40.0  31.0  \\
+            41.0  31.0  \\
+            42.0  31.0  \\
+            43.0  32.0  \\
+            44.0  32.0  \\
+            45.0  33.0  \\
+            46.0  34.0  \\
+            47.0  35.0  \\
+            48.0  36.0  \\
+            49.0  36.0  \\
+            50.0  37.0  \\
+        }
+        ;
+    \addlegendentry {MPC+EKF}
+\end{axis}
+\end{tikzpicture}
